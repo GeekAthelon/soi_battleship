@@ -5,7 +5,9 @@
   "main": "dest/battleship.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
-    "build": "tsc --outDir --project ."
+    "build": "tsc --outDir --project .",
+    "webpack": "webpack --mode=development",
+    "webpackp": "webpack --mode=production"
   },
   "repository": {
     "type": "git",
@@ -18,8 +20,12 @@
   },
   "homepage": "https://github.com/GeekAthelon/soi_battleship#readme",
   "devDependencies": {
+    "html-webpack-plugin": "^3.2.0",
+    "source-map-loader": "^0.2.4",
+    "ts-loader": "^5.3.0",
     "tslint": "^5.11.0",
-    "typescript": "^3.1.6"
-  },
-  "dependencies": {}
+    "typescript": "^3.1.6",
+    "webpack": "^4.25.1",
+    "webpack-cli": "^3.1.2"
+  }
 }
