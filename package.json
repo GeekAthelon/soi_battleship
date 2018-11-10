@@ -1,0 +1,25 @@
+{
+  "name": "soi_battleship",
+  "version": "0.0.1",
+  "description": "BattleShip for SOI",
+  "main": "dest/battleship.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "build": "tsc --outDir --project ."
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://GeekAthelon:Git8035Hub@github.com/GeekAthelon/soi_battleship.git"
+  },
+  "author": "Geek Athelon",
+  "license": "GPL-3.0",
+  "bugs": {
+    "url": "https://github.com/GeekAthelon/soi_battleship/issues"
+  },
+  "homepage": "https://github.com/GeekAthelon/soi_battleship#readme",
+  "devDependencies": {
+    "tslint": "^5.11.0",
+    "typescript": "^3.1.6"
+  },
+  "dependencies": {}
+}
