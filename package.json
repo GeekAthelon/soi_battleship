@@ -6,11 +6,10 @@
   "scripts": {
     "build": "tsc --project .",
     "clean": "rimraf dist build",
-    "webpack": "webpack --mode=development",
-    "webpackp": "webpack --mode=production",
+    "webpack": "npm run clean && webpack --mode=development",
+    "webpackp": "npm run clean && webpack --mode=production",
     "test": "npm run test:node",
     "test:node": "npm run clean && npm run build && mocha src/tests/",
-    "zz": " webpack --mode=development --config webpack-test-node.config.js && mocha build/test",
     "test:browser": "npm run clean && npm run build && webpack --mode=development --config webpack-test-browser.config.js",
     "testbundle": "mocha dist/test-bundle-node.js",
     "lint": "tslint --project .",
