@@ -7,7 +7,7 @@ module.exports = {
 ///        app: ['./zsrc/app/App.tsx', 'webpack-hot-middleware/client'],
 //        vendor: ['react', 'react-dom']
 //    },
-    entry: './src/battleship.ts',
+    entry: './src/app/battleship.ts',
     output: {
         path: path.resolve(__dirname, 'dist'),
         filename: 'js/[name].bundle.js'
