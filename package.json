@@ -4,12 +4,14 @@
   "description": "BattleShip for SOI",
   "main": "dest/battleship.js",
   "scripts": {
-    "build": "tsc --outDir --project .",
+    "build": "tsc --project .",
+    "clean": "rimraf dist build",
     "webpack": "webpack --mode=development",
     "webpackp": "webpack --mode=production",
     "test": "npm run test:node",
-    "test:node": "webpack --mode=development --config webpack-test-node.config.js",
-    "test:browser": "webpack --mode=development --config webpack-test-browser.config.js",
+    "test:node": "npm run clean && npm run build && mocha src/tests/",
+    "zz": " webpack --mode=development --config webpack-test-node.config.js && mocha build/test",
+    "test:browser": "npm run clean && npm run build && webpack --mode=development --config webpack-test-browser.config.js",
     "testbundle": "mocha dist/test-bundle-node.js",
     "lint": "tslint --project .",
     "validate": "npm-run-all --parallel test lint",
@@ -27,11 +29,14 @@
   },
   "homepage": "https://github.com/GeekAthelon/soi_battleship#readme",
   "devDependencies": {
+    "@types/mocha": "^5.2.5",
+    "@types/node": "^10.12.5",
     "chai": "^4.2.0",
     "html-webpack-plugin": "^3.2.0",
     "husky": "^1.1.3",
     "mocha": "^5.2.0",
     "npm-run-all": "^4.1.3",
+    "rimraf": "^2.6.2",
     "source-map-loader": "^0.2.4",
     "ts-loader": "^5.3.0",
     "tslint": "^5.11.0",
@@ -40,5 +45,8 @@
     "webpack-cli": "^3.1.2",
     "webpack-node-externals": "^1.7.2",
     "webpack-shell-plugin": "^0.5.0"
+  },
+  "dependencies": {
+    "@types/chai": "^4.1.7"
   }
 }

@@ -23,4 +23,4 @@ export function initGame() {
 }
 
 const g = initGame();
-alert(JSON.stringify(g));
+// alert(JSON.stringify(g));
