@@ -3,10 +3,10 @@ const path = require('path'),
     HtmlWebpackPlugin = require('html-webpack-plugin');
 
 module.exports = {
-//    entry: {
-///        app: ['./zsrc/app/App.tsx', 'webpack-hot-middleware/client'],
-//        vendor: ['react', 'react-dom']
-//    },
+    //    entry: {
+    ///        app: ['./zsrc/app/App.tsx', 'webpack-hot-middleware/client'],
+    //        vendor: ['react', 'react-dom']
+    //    },
     entry: './src/app/battleship.ts',
     output: {
         path: path.resolve(__dirname, 'dist'),
