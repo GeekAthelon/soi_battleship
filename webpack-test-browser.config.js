@@ -25,7 +25,19 @@ var config = {
         inject: true
       },
       new webpack.HotModuleReplacementPlugin()
-    )]
+    )
+  ],
+  optimization: {
+    splitChunks: {
+      cacheGroups: {
+        commons: {
+          test: /[\\/]node_modules[\\/]/,
+          name: "vendor",
+          chunks: "initial",
+        },
+      },
+    },
+  },
 };
 
 module.exports = config;
