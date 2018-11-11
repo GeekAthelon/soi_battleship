@@ -5,7 +5,7 @@
   "main": "dest/battleship.js",
   "scripts": {
     "build": "tsc --project .",
-    "clean": "rimraf dist build",
+    "clean": "rimraf dist build src/**/*.{js,js.map}",
     "webpack": "npm run clean && webpack --mode=development",
     "webpackp": "npm run clean && webpack --mode=production",
     "test": "npm run test:node",
