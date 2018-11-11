@@ -1,32 +1,26 @@
-console.log("This is battle ship");
-
 import { IGameData } from "./igamedata";
 
 export function initGame() {
-    const k = (k1: number) => k1 * 2;
-
-    debugger;
     const gameData: IGameData = {
         boardHeight: 10,
         boardWidth: 10,
-        turnCount: 0,
         player1: {
+            id: "1",
+            name: "Player 1",
             shipBoard: [],
             targetBoard: [],
-            name: "Player 1",
-            id: "1",
         },
         player2: {
+            id: "2",
+            name: "Player 1",
             shipBoard: [],
             targetBoard: [],
-            name: "Player 1",
-            id: "2",
-        }
+        },
+        turnCount: 0,
     };
 
     return gameData;
 }
-
 
 const g = initGame();
 alert(JSON.stringify(g));

@@ -12,4 +12,3 @@ export interface IGameData {
     player1: IPlayer;
     player2: IPlayer;
 }
-
