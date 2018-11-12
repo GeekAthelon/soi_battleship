@@ -9,7 +9,7 @@ export enum BoardCellType {
     miss = 103,
 }
 
-const shipData: IShipData[] = [
+export const shipData: IShipData[] = [
     { color: "blue", name: "Carrier", size: 5 },
     { color: "cyan", name: "Battleship", size: 4 },
     { color: "yellow", name: "Cruiser", size: 3 },
@@ -19,16 +19,44 @@ const shipData: IShipData[] = [
 
 const generateBoard = (startGameData: IStartGameData) => {
     const board: number[][] = [];
-    for (const h of range(1, startGameData.boardHeight)) {
-        const line: number[] = [];
+    for (const x of range(0, startGameData.boardWidth - 1)) {
+        board[x] = [];
 
-        for (const w of range(1, startGameData.boardWidth)) {
-            line.push(BoardCellType.water);
+        for (const y of range(0, startGameData.boardHeight - 1)) {
+            board[x][y] = BoardCellType.water;
         }
-        board.push(line);
     }
     return board;
 };
+
+export function tryPlaceShip(
+    shipNumber: number,
+    x: number,
+    y: number,
+    position: "h" | "v",
+    board: number[][]): boolean {
+
+    const xRange = position === "h" ? range(x, x + shipData[shipNumber].size - 1) : range(x, x);
+    const yRange = position === "v" ? range(y, y + shipData[shipNumber].size - 1) : range(y, y);
+
+    for (x of xRange) {
+        for (y of yRange) {
+            if (!board[x]) {
+                return false;
+            }
+            if (board[x][y] !== BoardCellType.water) {
+                return false;
+            }
+        }
+    }
+
+    for (x of xRange) {
+        for (y of yRange) {
+            board[x][y] = shipNumber;
+        }
+    }
+    return true;
+}
 
 export function initGame(startGameData: IStartGameData) {
     const gameData: IGameData = {
