@@ -24,7 +24,6 @@ export interface IGameData {
 }
 
 export interface IShipData {
-    color: string;
     name: string;
     size: number;
 }

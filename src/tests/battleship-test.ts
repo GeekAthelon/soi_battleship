@@ -1,9 +1,12 @@
 /* tslint:disable:only-arrow-functions */
 
 import * as chai from "chai";
+import { colors } from "../app/lib/terminal-colors";
+
 const assert = chai.assert;
 import * as battleShip from "../app/battleship";
 import { IGameData, IPlayer, IStartGameData } from "../app/igamedata";
+import { range } from "../app/lib/range";
 
 describe("Main BattleShip Engine", function() {
     interface ITestLoop {
@@ -12,6 +15,45 @@ describe("Main BattleShip Engine", function() {
         p: "h" | "v";
         result: boolean;
     }
+    const boardToNodeString = (board: number[][], gameData: IGameData) => {
+        interface INodePrettyPrint {
+            id: number;
+            color: string;
+            symbol: string;
+        }
+
+        const nodePrettyPrint: INodePrettyPrint[] = [
+            { id: 0, color: colors.FgGreen, symbol: "o" },
+            { id: 1, color: colors.FgMagenta, symbol: "o" },
+            { id: 2, color: colors.Bright + colors.FgGreen, symbol: "o" },
+            { id: 3, color: colors.FgYellow, symbol: "o" },
+            { id: 4, color: colors.Bright + colors.FgBlack, symbol: "o" },
+            { id: battleShip.BoardCellType.water, color: colors.Bright + colors.FgBlack, symbol: "~" },
+        ];
+        const def: INodePrettyPrint = { id: -1, color: colors.Bright + colors.FgWhite, symbol: "?" };
+
+        let out = "";
+
+        for (const y of range(0, gameData.boardHeight - 1)) {
+            for (const x of range(0, gameData.boardWidth - 1)) {
+                const cell = board[x][y];
+                const fmt = nodePrettyPrint.find((p) => p.id === cell);
+                if (fmt) {
+                    out += fmt.color + fmt.symbol;
+                } else {
+                    out += def.color + `<${cell}>`;
+                }
+            }
+            out += "\r\n";
+        }
+
+        out += colors.Reset;
+
+        for (const i of range(1, board[0].length)) {
+            out += "-";
+        }
+        return out;
+    };
 
     const getStartGameData = () => {
         const startGameData: IStartGameData = {
@@ -146,7 +188,9 @@ describe("Main BattleShip Engine", function() {
                     } else {
                         testBoardValid(gameData.player1.shipBoard, gameData);
                     }
-                });
+
+                    // console.log(boardToNodeString(gameData.player1.shipBoard,gameData))
+               });
             });
         });
     });
