@@ -1,4 +1,4 @@
-import { IGameData, IShipData, IStartGameData } from "./igamedata";
+import { IGameData, IPlayer, IShipData, IStartGameData } from "./igamedata";
 import { range } from "./lib/range";
 
 export enum BoardCellType {
@@ -17,7 +17,7 @@ export const shipData: IShipData[] = [
     { name: "Destroyer", size: 2 },
 ];
 
-const generateBoard = (startGameData: IStartGameData) => {
+const generateBoard = (startGameData: IStartGameData | IGameData) => {
     const board: number[][] = [];
     for (const x of range(0, startGameData.boardWidth - 1)) {
         board[x] = [];
@@ -56,6 +56,32 @@ export function tryPlaceShip(
         }
     }
     return true;
+}
+
+export function randomizeShips(player: IPlayer, gameData: IGameData) {
+    let retryCount = 50;
+
+    player.shipBoard = generateBoard(gameData);
+
+    function getRandomInt(min: number, max: number) {
+        return Math.floor(Math.random() * (max - min + 1)) + min;
+    }
+
+    shipData.forEach((ship, idx) => {
+        let isValid = false;
+        while (!isValid) {
+            retryCount--;
+            if (retryCount === 0) {
+                throw new Error("Unable to place ships");
+            }
+
+            const x = getRandomInt(0, gameData.boardWidth);
+            const y = getRandomInt(0, gameData.boardHeight);
+            const p: "h" | "v" = getRandomInt(0, 1) === 0 ? "h" : "v";
+
+            isValid = tryPlaceShip(idx, x, y, p, player.shipBoard);
+        }
+    });
 }
 
 export function initGame(startGameData: IStartGameData) {

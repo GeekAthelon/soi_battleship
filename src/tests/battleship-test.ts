@@ -190,8 +190,37 @@ describe("Main BattleShip Engine", function() {
                     }
 
                     // console.log(boardToNodeString(gameData.player1.shipBoard,gameData))
-               });
+                });
             });
         });
+
+        describe("randomzing locations", function() {
+            it("should place all ships", function() {
+                for (const i of range(1, 20)) {
+                    const startGameData = getStartGameData();
+
+                    const gameData = battleShip.initGame(startGameData);
+                    battleShip.randomizeShips(gameData.player1, gameData);
+                    testBoardValid(gameData.player1.shipBoard, gameData);
+
+                    // console.log(boardToNodeString(gameData.player1.shipBoard, gameData));
+
+                    const found = new Map();
+                    for (const x of range(0, startGameData.boardWidth - 1)) {
+                        for (const y of range(0, startGameData.boardHeight - 1)) {
+                            const cell = gameData.player1.shipBoard[x][y];
+                            const counter = found.get(cell) || 0;
+                            found.set(cell, counter + 1);
+                        }
+                    }
+
+                    battleShip.shipData.forEach((ship, idx) => {
+                        const counter = found.get(idx) || 0;
+                        assert.equal(ship.size, counter, `Ship: ${ship.name} incomplete.`);
+                    });
+                }
+            });
+        });
+
     });
 });
