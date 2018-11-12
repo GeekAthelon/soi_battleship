@@ -1,12 +1,21 @@
-import { IGameData, IStartGameData } from "./igamedata";
+import { IGameData, IShipData, IStartGameData } from "./igamedata";
 import { range } from "./lib/range";
 
 export enum BoardCellType {
-    water = 1,
-    ship = 2,
-    hit = 3,
-    miss = 4,
+    // Numbers below 100 are for ships
+    water = 100,
+    ship = 101,
+    hit = 102,
+    miss = 103,
 }
+
+const shipData: IShipData[] = [
+    { color: "blue", name: "Carrier", size: 5 },
+    { color: "cyan", name: "Battleship", size: 4 },
+    { color: "yellow", name: "Cruiser", size: 3 },
+    { color: "line", name: "Submarine", size: 3 },
+    { color: "line", name: "Destroyer", size: 2 },
+];
 
 const generateBoard = (startGameData: IStartGameData) => {
     const board: number[][] = [];
@@ -29,12 +38,14 @@ export function initGame(startGameData: IStartGameData) {
             id: startGameData.player1Id,
             name: startGameData.player1Name,
             shipBoard: generateBoard(startGameData),
+            shipHitPoints: shipData.map((s) => s.size),
             targetBoard: generateBoard(startGameData),
         },
         player2: {
             id: startGameData.player2Id,
             name: startGameData.player2Name,
             shipBoard: generateBoard(startGameData),
+            shipHitPoints: shipData.map((s) => s.size),
             targetBoard: generateBoard(startGameData),
         },
         turnCount: 0,

@@ -11,6 +11,7 @@ export interface IPlayer {
     name: string;
     id: string;
     shipBoard: number[][];
+    shipHitPoints: number[];
     targetBoard: number[][];
 }
 
@@ -20,4 +21,10 @@ export interface IGameData {
     turnCount: number;
     player1: IPlayer;
     player2: IPlayer;
+}
+
+export interface IShipData {
+    color: string;
+    name: string;
+    size: number;
 }

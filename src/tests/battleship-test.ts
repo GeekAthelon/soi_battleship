@@ -30,6 +30,13 @@ const testBoardValid = (board: number[][], gameData: IGameData) => {
     }
 };
 
+const testPlayerData = (player: IPlayer, gameData: IGameData) => {
+    assert.ok(player.shipHitPoints.length);
+    player.shipHitPoints.forEach((sp) => assert.ok(sp, "Ship hit points"));
+    testBoardValid(player.shipBoard, gameData);
+    testBoardValid(player.targetBoard, gameData);
+};
+
 describe("testing battleship start game", function() {
     it("battleship object exists", function() {
         assert.ok(battleShip);
@@ -41,8 +48,7 @@ describe("testing battleship start game", function() {
 
         assert.equal(startGameData.player1Id, gameData.player1.id);
         assert.equal(startGameData.player1Name, gameData.player1.name);
-        testBoardValid(gameData.player1.shipBoard, gameData);
-        testBoardValid(gameData.player1.targetBoard, gameData);
+        testPlayerData(gameData.player1, gameData);
     });
 
     it("player2 data is created", function() {
@@ -51,7 +57,6 @@ describe("testing battleship start game", function() {
 
         assert.equal(startGameData.player2Id, gameData.player2.id);
         assert.equal(startGameData.player2Name, gameData.player2.name);
-        testBoardValid(gameData.player1.shipBoard, gameData);
-        testBoardValid(gameData.player1.targetBoard, gameData);
-    });
+        testPlayerData(gameData.player1, gameData);
+     });
 });
