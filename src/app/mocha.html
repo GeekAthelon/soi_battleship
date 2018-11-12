@@ -12,18 +12,19 @@
         Loading
     </div>
 
-    <script src="https://unpkg.com/chai/chai.js"></script>
+    <zscript src="https://unpkg.com/chai/chai.js"></zscript>
     <script src="https://unpkg.com/mocha@5.2.0/mocha.js"></script>
 
     <script>mocha.setup('bdd')</script>
     <script>
-        setTimeout(() => {
+        function initMocha() {
             document.getElementById("mocha").innerHTML = "";
-            
+            console.log("Starting tests...");
+
             mocha.checkLeaks();
             mocha.run();
-        }, 1);
-
+        }
+        setTimeout(initMocha, 10 * 1);
     </script>
 </body>
 
