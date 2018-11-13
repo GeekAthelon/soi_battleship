@@ -66,6 +66,13 @@ describe("Main BattleShip Engine", function() {
                 { name: "Darth Vader", id: "dv" },
                 { name: "Luke Skywalker", id: "sk" },
             ],
+            shipData: [
+                { name: "Carrier", size: 5 },
+                { name: "Battleship", size: 4 },
+                { name: "Cruiser", size: 3 },
+                { name: "Submarine", size: 3 },
+                { name: "Destroyer", size: 2 },
+            ],
         };
         return startGameData;
     };
@@ -114,10 +121,11 @@ describe("Main BattleShip Engine", function() {
                 const startGameData = getStartGameData();
 
                 startGameData.boardHeight = 1;
-                startGameData.boardWidth = battleShip.shipData[shipNumber].size;
+                startGameData.boardWidth = startGameData.shipData[shipNumber].size;
                 const gameData = battleShip.initGame(startGameData, startGameData.playerList[0].id);
 
-                const isValid = battleShip.tryPlaceShip(shipNumber, 0, 0, "h", gameData.data.shipBoard);
+                const isValid = battleShip.tryPlaceShip(
+                    gameData.startGameData.shipData, shipNumber, 0, 0, "h", gameData.data.shipBoard);
                 assert.ok(isValid, "isValid");
                 testBoardValid(gameData.data.shipBoard, gameData, shipNumber);
             });
@@ -128,11 +136,12 @@ describe("Main BattleShip Engine", function() {
                 const shipNumber = 0;
                 const startGameData = getStartGameData();
 
-                startGameData.boardHeight = battleShip.shipData[shipNumber].size;
+                startGameData.boardHeight = startGameData.shipData[shipNumber].size;
                 startGameData.boardWidth = 1;
                 const gameData = battleShip.initGame(startGameData, startGameData.playerList[0].id);
 
-                const isValid = battleShip.tryPlaceShip(shipNumber, 0, 0, "v", gameData.data.shipBoard);
+                const isValid = battleShip.tryPlaceShip(
+                    gameData.startGameData.shipData, shipNumber, 0, 0, "v", gameData.data.shipBoard);
                 assert.ok(isValid, "isValid");
                 testBoardValid(gameData.data.shipBoard, gameData, shipNumber);
             });
@@ -143,8 +152,8 @@ describe("Main BattleShip Engine", function() {
                 const shipNumber = 0;
                 const startGameData = getStartGameData();
 
-                startGameData.boardHeight = battleShip.shipData[shipNumber].size;
-                startGameData.boardWidth = battleShip.shipData[shipNumber].size;
+                startGameData.boardHeight = startGameData.shipData[shipNumber].size;
+                startGameData.boardWidth = startGameData.shipData[shipNumber].size;
 
                 const tests: ITestLoop[] = [
                     { x: 0, y: 0, p: "h", result: true },
@@ -172,7 +181,8 @@ describe("Main BattleShip Engine", function() {
                     const gameData = battleShip.initGame(startGameData, startGameData.playerList[0].id);
 
                     const { x, y, p, result } = t;
-                    const isValid = battleShip.tryPlaceShip(shipNumber, x, y, p, gameData.data.shipBoard);
+                    const isValid = battleShip.tryPlaceShip(
+                        gameData.startGameData.shipData, shipNumber, x, y, p, gameData.data.shipBoard);
 
                     assert.equal(result, isValid, `isValid ${x}, ${y}:${result} [${isValid}]`);
 
@@ -207,7 +217,7 @@ describe("Main BattleShip Engine", function() {
                         }
                     }
 
-                    battleShip.shipData.forEach((ship, idx) => {
+                    startGameData.shipData.forEach((ship, idx) => {
                         const counter = found.get(idx) || 0;
                         assert.equal(ship.size, counter, `Ship: ${ship.name} incomplete.`);
                     });
@@ -216,7 +226,6 @@ describe("Main BattleShip Engine", function() {
         });
 
         describe("IMsgAttack", function() {
-
             this.beforeEach(() => {
                 PubSub.UnsubAll();
             });

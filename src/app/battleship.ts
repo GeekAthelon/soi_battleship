@@ -14,14 +14,6 @@ export enum BoardCellType {
     miss = 103,
 }
 
-export const shipData: IShipData[] = [
-    { name: "Carrier", size: 5 },
-    { name: "Battleship", size: 4 },
-    { name: "Cruiser", size: 3 },
-    { name: "Submarine", size: 3 },
-    { name: "Destroyer", size: 2 },
-];
-
 const generateBoard = (startGameData: IStartGameData) => {
     const board: number[][] = [];
     for (const x of range(0, startGameData.boardWidth - 1)) {
@@ -35,6 +27,7 @@ const generateBoard = (startGameData: IStartGameData) => {
 };
 
 export function tryPlaceShip(
+    shipData: IShipData[],
     shipNumber: number,
     x: number,
     y: number,
@@ -72,7 +65,7 @@ export function randomizeShips(gameData: IGameData) {
 
     gameData.data.shipBoard = generateBoard(gameData.startGameData);
 
-    shipData.forEach((ship, idx) => {
+    gameData.startGameData.shipData.forEach((ship, idx) => {
         let isValid = false;
         while (!isValid) {
             retryCount--;
@@ -84,7 +77,7 @@ export function randomizeShips(gameData: IGameData) {
             const y = getRandomInt(0, gameData.startGameData.boardHeight);
             const p: "h" | "v" = getRandomInt(0, 1) === 0 ? "h" : "v";
 
-            isValid = tryPlaceShip(idx, x, y, p, gameData.data.shipBoard);
+            isValid = tryPlaceShip(gameData.startGameData.shipData, idx, x, y, p, gameData.data.shipBoard);
         }
     });
 }
@@ -103,7 +96,7 @@ async function handleAttack(gameData: IGameData, gameMessage: IMessage.IMsgAttac
         targetPlayerId: gameMessage.sourcePlayerId,
     };
 
-    if (cell < shipData.length) {
+    if (cell < gameData.startGameData.shipData.length) {
         // Hit a ship in an unhit-spot
     } else if (cell === BoardCellType.water) {
         // Hit water
@@ -139,7 +132,7 @@ export function initGame(startGameData: IStartGameData, playerID: string) {
     const gameData: IGameData = {
         data: {
             shipBoard: generateBoard(startGameData),
-            shipHitPoints: shipData.map((s) => s.size),
+            shipHitPoints: startGameData.shipData.map((s) => s.size),
             targetBoard: generateBoard(startGameData),
         },
         id: playerID,
