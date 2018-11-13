@@ -58,14 +58,14 @@ export function tryPlaceShip(
     return true;
 }
 
-export function randomizeShips(player: IPlayer, gameData: IGameData) {
-    let retryCount = 50;
-
-    player.shipBoard = generateBoard(gameData.startGameData);
-
+export function randomizeShips( gameData: IGameData) {
     function getRandomInt(min: number, max: number) {
         return Math.floor(Math.random() * (max - min + 1)) + min;
     }
+
+    let retryCount = 50;
+
+    gameData.data.shipBoard = generateBoard(gameData.startGameData);
 
     shipData.forEach((ship, idx) => {
         let isValid = false;

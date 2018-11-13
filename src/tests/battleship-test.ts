@@ -190,7 +190,7 @@ describe("Main BattleShip Engine", function() {
                     const startGameData = getStartGameData();
 
                     const gameData = battleShip.initGame(startGameData, startGameData.playerList[0].id);
-                    battleShip.randomizeShips(gameData.data, gameData);
+                    battleShip.randomizeShips(gameData);
                     testBoardValid(gameData.data.shipBoard, gameData);
 
                     // console.log(boardToNodeString(gameData.player1.shipBoard, gameData));
