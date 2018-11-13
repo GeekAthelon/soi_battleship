@@ -34,8 +34,8 @@ describe("Main BattleShip Engine", function() {
 
         let out = "";
 
-        for (const y of range(0, gameData.boardHeight - 1)) {
-            for (const x of range(0, gameData.boardWidth - 1)) {
+        for (const y of range(0, gameData.startGameData.boardHeight - 1)) {
+            for (const x of range(0, gameData.startGameData.boardWidth - 1)) {
                 const cell = board[x][y];
                 const fmt = nodePrettyPrint.find((p) => p.id === cell);
                 if (fmt) {
@@ -59,19 +59,19 @@ describe("Main BattleShip Engine", function() {
         const startGameData: IStartGameData = {
             boardHeight: 10,
             boardWidth: 15,
-            player1Id: "dv",
-            player1Name: "Darth VAder",
-            player2Id: "LK",
-            player2Name: "Luke Skywalker",
+            playerList: [
+                { name: "Darth Vader", id: "dv" },
+                { name: "Luke Skywalker", id: "sk" },
+            ],
         };
         return startGameData;
     };
 
     const testBoardValid = (board: number[][], gameData: IGameData, shouldContain: number = -1) => {
-        assert.equal(board.length, gameData.boardWidth, "Game Width");
+        assert.equal(board.length, gameData.startGameData.boardWidth, "Game Width");
 
         for (const line of board) {
-            assert.equal(line.length, gameData.boardHeight, "Game Height");
+            assert.equal(line.length, gameData.startGameData.boardHeight, "Game Height");
 
             for (const cell of line) {
                 if (shouldContain !== -1) {
@@ -97,20 +97,10 @@ describe("Main BattleShip Engine", function() {
 
         it("player1 data is created", function() {
             const startGameData = getStartGameData();
-            const gameData = battleShip.initGame(startGameData);
+            const gameData = battleShip.initGame(startGameData, startGameData.playerList[0].id);
 
-            assert.equal(startGameData.player1Id, gameData.player1.id);
-            assert.equal(startGameData.player1Name, gameData.player1.name);
-            testPlayerData(gameData.player1, gameData);
-        });
-
-        it("player2 data is created", function() {
-            const startGameData = getStartGameData();
-            const gameData = battleShip.initGame(startGameData);
-
-            assert.equal(startGameData.player2Id, gameData.player2.id);
-            assert.equal(startGameData.player2Name, gameData.player2.name);
-            testPlayerData(gameData.player1, gameData);
+            assert.equal(startGameData.playerList[0].id, gameData.data.id);
+            testPlayerData(gameData.data, gameData);
         });
     });
 
@@ -122,11 +112,11 @@ describe("Main BattleShip Engine", function() {
 
                 startGameData.boardHeight = 1;
                 startGameData.boardWidth = battleShip.shipData[shipNumber].size;
-                const gameData = battleShip.initGame(startGameData);
+                const gameData = battleShip.initGame(startGameData, startGameData.playerList[0].id);
 
-                const isValid = battleShip.tryPlaceShip(shipNumber, 0, 0, "h", gameData.player1.shipBoard);
+                const isValid = battleShip.tryPlaceShip(shipNumber, 0, 0, "h", gameData.data.shipBoard);
                 assert.ok(isValid, "isValid");
-                testBoardValid(gameData.player1.shipBoard, gameData, shipNumber);
+                testBoardValid(gameData.data.shipBoard, gameData, shipNumber);
             });
         });
 
@@ -137,11 +127,11 @@ describe("Main BattleShip Engine", function() {
 
                 startGameData.boardHeight = battleShip.shipData[shipNumber].size;
                 startGameData.boardWidth = 1;
-                const gameData = battleShip.initGame(startGameData);
+                const gameData = battleShip.initGame(startGameData, startGameData.playerList[0].id);
 
-                const isValid = battleShip.tryPlaceShip(shipNumber, 0, 0, "v", gameData.player1.shipBoard);
+                const isValid = battleShip.tryPlaceShip(shipNumber, 0, 0, "v", gameData.data.shipBoard);
                 assert.ok(isValid, "isValid");
-                testBoardValid(gameData.player1.shipBoard, gameData, shipNumber);
+                testBoardValid(gameData.data.shipBoard, gameData, shipNumber);
             });
         });
 
@@ -176,17 +166,17 @@ describe("Main BattleShip Engine", function() {
                 ];
 
                 tests.forEach((t) => {
-                    const gameData = battleShip.initGame(startGameData);
+                    const gameData = battleShip.initGame(startGameData, startGameData.playerList[0].id);
 
                     const { x, y, p, result } = t;
-                    const isValid = battleShip.tryPlaceShip(shipNumber, x, y, p, gameData.player1.shipBoard);
+                    const isValid = battleShip.tryPlaceShip(shipNumber, x, y, p, gameData.data.shipBoard);
 
                     assert.equal(result, isValid, `isValid ${x}, ${y}:${result} [${isValid}]`);
 
                     if (result === false) {
-                        testBoardValid(gameData.player1.shipBoard, gameData, battleShip.BoardCellType.water);
+                        testBoardValid(gameData.data.shipBoard, gameData, battleShip.BoardCellType.water);
                     } else {
-                        testBoardValid(gameData.player1.shipBoard, gameData);
+                        testBoardValid(gameData.data.shipBoard, gameData);
                     }
 
                     // console.log(boardToNodeString(gameData.player1.shipBoard,gameData))
@@ -199,16 +189,16 @@ describe("Main BattleShip Engine", function() {
                 for (const i of range(1, 20)) {
                     const startGameData = getStartGameData();
 
-                    const gameData = battleShip.initGame(startGameData);
-                    battleShip.randomizeShips(gameData.player1, gameData);
-                    testBoardValid(gameData.player1.shipBoard, gameData);
+                    const gameData = battleShip.initGame(startGameData, startGameData.playerList[0].id);
+                    battleShip.randomizeShips(gameData.data, gameData);
+                    testBoardValid(gameData.data.shipBoard, gameData);
 
                     // console.log(boardToNodeString(gameData.player1.shipBoard, gameData));
 
                     const found = new Map();
                     for (const x of range(0, startGameData.boardWidth - 1)) {
                         for (const y of range(0, startGameData.boardHeight - 1)) {
-                            const cell = gameData.player1.shipBoard[x][y];
+                            const cell = gameData.data.shipBoard[x][y];
                             const counter = found.get(cell) || 0;
                             found.set(cell, counter + 1);
                         }

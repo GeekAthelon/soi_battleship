@@ -17,7 +17,7 @@ export const shipData: IShipData[] = [
     { name: "Destroyer", size: 2 },
 ];
 
-const generateBoard = (startGameData: IStartGameData | IGameData) => {
+const generateBoard = (startGameData: IStartGameData) => {
     const board: number[][] = [];
     for (const x of range(0, startGameData.boardWidth - 1)) {
         board[x] = [];
@@ -61,7 +61,7 @@ export function tryPlaceShip(
 export function randomizeShips(player: IPlayer, gameData: IGameData) {
     let retryCount = 50;
 
-    player.shipBoard = generateBoard(gameData);
+    player.shipBoard = generateBoard(gameData.startGameData);
 
     function getRandomInt(min: number, max: number) {
         return Math.floor(Math.random() * (max - min + 1)) + min;
@@ -75,8 +75,8 @@ export function randomizeShips(player: IPlayer, gameData: IGameData) {
                 throw new Error("Unable to place ships");
             }
 
-            const x = getRandomInt(0, gameData.boardWidth);
-            const y = getRandomInt(0, gameData.boardHeight);
+            const x = getRandomInt(0, gameData.startGameData.boardWidth);
+            const y = getRandomInt(0, gameData.startGameData.boardHeight);
             const p: "h" | "v" = getRandomInt(0, 1) === 0 ? "h" : "v";
 
             isValid = tryPlaceShip(idx, x, y, p, player.shipBoard);
@@ -84,24 +84,15 @@ export function randomizeShips(player: IPlayer, gameData: IGameData) {
     });
 }
 
-export function initGame(startGameData: IStartGameData) {
+export function initGame(startGameData: IStartGameData, playerID: string) {
     const gameData: IGameData = {
-        boardHeight: startGameData.boardHeight,
-        boardWidth: startGameData.boardWidth,
-        player1: {
-            id: startGameData.player1Id,
-            name: startGameData.player1Name,
+        data: {
+            id: playerID,
             shipBoard: generateBoard(startGameData),
             shipHitPoints: shipData.map((s) => s.size),
             targetBoard: generateBoard(startGameData),
         },
-        player2: {
-            id: startGameData.player2Id,
-            name: startGameData.player2Name,
-            shipBoard: generateBoard(startGameData),
-            shipHitPoints: shipData.map((s) => s.size),
-            targetBoard: generateBoard(startGameData),
-        },
+        startGameData,
         turnCount: 0,
     };
 

@@ -1,14 +1,14 @@
+export interface IPlayerList {
+    name: string;
+    id: string;
+}
 export interface IStartGameData {
     boardHeight: number;
     boardWidth: number;
-    player1Name: string;
-    player1Id: string;
-    player2Name: string;
-    player2Id: string;
+    playerList: IPlayerList[];
 }
 
 export interface IPlayer {
-    name: string;
     id: string;
     shipBoard: number[][];
     shipHitPoints: number[];
@@ -16,11 +16,9 @@ export interface IPlayer {
 }
 
 export interface IGameData {
-    boardWidth: number;
-    boardHeight: number;
+    startGameData: IStartGameData;
     turnCount: number;
-    player1: IPlayer;
-    player2: IPlayer;
+    data: IPlayer;
 }
 
 export interface IShipData {
