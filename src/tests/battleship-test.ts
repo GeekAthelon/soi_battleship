@@ -1,13 +1,15 @@
 /* tslint:disable:only-arrow-functions */
 
 import * as chai from "chai";
-import { colors } from "../app/lib/terminal-colors";
-
-const assert = chai.assert;
 import * as battleShip from "../app/battleship";
 import { IGameData, IPlayer, IStartGameData } from "../app/igamedata";
+import { IMsgAttack, IMsgAttackResponse } from "../app/imessages";
+import * as PubSub from "../app/lib/pub-sub";
 import { range } from "../app/lib/range";
+import { colors } from "../app/lib/terminal-colors";
+import * as pubSubMessages from "../app/pub-sub-name";
 
+const assert = chai.assert;
 describe("Main BattleShip Engine", function() {
     interface ITestLoop {
         x: number;
@@ -212,5 +214,33 @@ describe("Main BattleShip Engine", function() {
             });
         });
 
+        describe("IMsgAttack", function() {
+
+            this.beforeEach(() => {
+                PubSub.UnsubAll();
+            });
+
+            it("Attacking outside the board unsuccessful", function(done) {
+                const startGameData = getStartGameData();
+                const gameData1 = battleShip.initGame(startGameData, startGameData.playerList[0].id);
+                const gameData2 = battleShip.initGame(startGameData, startGameData.playerList[1].id);
+
+                battleShip.randomizeShips(gameData1);
+                battleShip.randomizeShips(gameData2);
+
+                const attackMessage: IMsgAttack = {
+                    id: "attack",
+                    x: -1,
+                    y: -1,
+                };
+
+                PubSub.Sub(pubSubMessages.ATTACK_RESPONSE, (msg: IMsgAttackResponse) => {
+                    assert.deepEqual(false, msg.isSuccess);
+                    done();
+                });
+
+                battleShip.processMessage(attackMessage);
+            });
+        });
     });
 });

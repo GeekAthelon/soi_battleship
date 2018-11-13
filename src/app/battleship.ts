@@ -1,4 +1,8 @@
+import * as pubSubMessages from "../app/pub-sub-name";
 import { IGameData, IPlayer, IShipData, IStartGameData } from "./igamedata";
+import * as IMessage from "./imessages";
+import { IMsgAttackResponse } from "./imessages";
+import * as PubSub from "./lib/pub-sub";
 import { range } from "./lib/range";
 
 export enum BoardCellType {
@@ -58,7 +62,7 @@ export function tryPlaceShip(
     return true;
 }
 
-export function randomizeShips( gameData: IGameData) {
+export function randomizeShips(gameData: IGameData) {
     function getRandomInt(min: number, max: number) {
         return Math.floor(Math.random() * (max - min + 1)) + min;
     }
@@ -79,9 +83,31 @@ export function randomizeShips( gameData: IGameData) {
             const y = getRandomInt(0, gameData.startGameData.boardHeight);
             const p: "h" | "v" = getRandomInt(0, 1) === 0 ? "h" : "v";
 
-            isValid = tryPlaceShip(idx, x, y, p, player.shipBoard);
+            isValid = tryPlaceShip(idx, x, y, p, gameData.data.shipBoard);
         }
     });
+}
+
+export function processMessage(gameMessage: IMessage.GameMessage) {
+    switch (gameMessage.id) {
+        case "attack":
+
+            const responseMessage: IMsgAttackResponse = {
+                id: "attack-response",
+                isHit: false,
+                isSink: false,
+                isSuccess: false,
+                sunkShip: undefined,
+            };
+
+            PubSub.Pub(pubSubMessages.ATTACK_RESPONSE, responseMessage);
+
+            break;
+        case "attack-response":
+            break;
+        default:
+            throw new Error(gameMessage);
+    }
 }
 
 export function initGame(startGameData: IStartGameData, playerID: string) {
