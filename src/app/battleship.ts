@@ -117,11 +117,11 @@ async function handleAttack(gameData: IGameData, gameMessage: IMessage.IMsgAttac
 
 export async function processMessage(gameMessage: IMessage.GameMessage) {
     const gameData = await dataStore.load(gameMessage.targetPlayerId);
-    let resposnseMessage: IMessage.GameMessage | undefined;
+    let responseMessage: IMessage.GameMessage | undefined;
 
     switch (gameMessage.id) {
         case "attack":
-            resposnseMessage = await handleAttack(gameData, gameMessage);
+            responseMessage = await handleAttack(gameData, gameMessage);
             break;
         case "attack-response":
             break;
@@ -130,8 +130,8 @@ export async function processMessage(gameMessage: IMessage.GameMessage) {
     }
 
     await dataStore.save(gameMessage.targetPlayerId, gameData);
-    if (resposnseMessage) {
-        PubSub.Pub(pubSubMessages.ATTACK_RESPONSE, resposnseMessage);
+    if (responseMessage) {
+        PubSub.Pub(pubSubMessages.ATTACK_RESPONSE, responseMessage);
     }
 }
 
