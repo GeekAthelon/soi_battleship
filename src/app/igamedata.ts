@@ -9,13 +9,13 @@ export interface IStartGameData {
 }
 
 export interface IPlayer {
-    id: string;
     shipBoard: number[][];
     shipHitPoints: number[];
     targetBoard: number[][];
 }
 
 export interface IGameData {
+    id: string;
     startGameData: IStartGameData;
     turnCount: number;
     data: IPlayer;

@@ -1,5 +1,9 @@
+import { IGameData } from "./igamedata";
+
 export interface IMsgBase {
     id: string;
+    targetPlayerId: string;
+    sourcePlayerId: string;
 }
 
 export interface IMsgAttack extends IMsgBase {
@@ -24,6 +28,9 @@ export interface IMsgAttackResponse extends IMsgBase {
 
     // What ship was sunk?
     sunkShip: number | undefined;
+
+    // Whose turn?
+    playerTurn: string;
 }
 
 export type GameMessage = IMsgAttack | IMsgAttackResponse;

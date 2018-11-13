@@ -1,7 +1,8 @@
 import * as pubSubMessages from "../app/pub-sub-name";
-import { IGameData, IPlayer, IShipData, IStartGameData } from "./igamedata";
+import { IGameData, IShipData, IStartGameData } from "./igamedata";
 import * as IMessage from "./imessages";
 import { IMsgAttackResponse } from "./imessages";
+import * as dataStore from "./lib/data-store";
 import * as PubSub from "./lib/pub-sub";
 import { range } from "./lib/range";
 
@@ -88,36 +89,60 @@ export function randomizeShips(gameData: IGameData) {
     });
 }
 
-export function processMessage(gameMessage: IMessage.GameMessage) {
+async function handleAttack(gameData: IGameData, gameMessage: IMessage.IMsgAttack) {
+    const cell = gameData.data.shipBoard[gameMessage.x] && gameData.data.shipBoard[gameMessage.x][gameMessage.y];
+
+    const responseMessage: IMsgAttackResponse = {
+        id: "attack-response",
+        isHit: false,
+        isSink: false,
+        isSuccess: false,
+        playerTurn: gameMessage.sourcePlayerId,
+        sourcePlayerId: gameMessage.targetPlayerId,
+        sunkShip: undefined,
+        targetPlayerId: gameMessage.sourcePlayerId,
+    };
+
+    if (cell < shipData.length) {
+        // Hit a ship in an unhit-spot
+    } else if (cell === BoardCellType.water) {
+        // Hit water
+    } else {
+        // Either hit a targetted spot alreada
+        // Or, hit outside the game area
+    }
+
+    return responseMessage;
+}
+
+export async function processMessage(gameMessage: IMessage.GameMessage) {
+    const gameData = await dataStore.load(gameMessage.targetPlayerId);
+    let resposnseMessage: IMessage.GameMessage | undefined;
+
     switch (gameMessage.id) {
         case "attack":
-
-            const responseMessage: IMsgAttackResponse = {
-                id: "attack-response",
-                isHit: false,
-                isSink: false,
-                isSuccess: false,
-                sunkShip: undefined,
-            };
-
-            PubSub.Pub(pubSubMessages.ATTACK_RESPONSE, responseMessage);
-
+            resposnseMessage = await handleAttack(gameData, gameMessage);
             break;
         case "attack-response":
             break;
         default:
             throw new Error(gameMessage);
     }
+
+    await dataStore.save(gameMessage.targetPlayerId, gameData);
+    if (resposnseMessage) {
+        PubSub.Pub(pubSubMessages.ATTACK_RESPONSE, resposnseMessage);
+    }
 }
 
 export function initGame(startGameData: IStartGameData, playerID: string) {
     const gameData: IGameData = {
         data: {
-            id: playerID,
             shipBoard: generateBoard(startGameData),
             shipHitPoints: shipData.map((s) => s.size),
             targetBoard: generateBoard(startGameData),
         },
+        id: playerID,
         startGameData,
         turnCount: 0,
     };

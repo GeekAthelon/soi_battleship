@@ -4,6 +4,7 @@ import * as chai from "chai";
 import * as battleShip from "../app/battleship";
 import { IGameData, IPlayer, IStartGameData } from "../app/igamedata";
 import { IMsgAttack, IMsgAttackResponse } from "../app/imessages";
+import * as dataStore from "../app/lib/data-store";
 import * as PubSub from "../app/lib/pub-sub";
 import { range } from "../app/lib/range";
 import { colors } from "../app/lib/terminal-colors";
@@ -101,7 +102,7 @@ describe("Main BattleShip Engine", function() {
             const startGameData = getStartGameData();
             const gameData = battleShip.initGame(startGameData, startGameData.playerList[0].id);
 
-            assert.equal(startGameData.playerList[0].id, gameData.data.id);
+            assert.equal(startGameData.playerList[0].id, gameData.id);
             testPlayerData(gameData.data, gameData);
         });
     });
@@ -228,18 +229,26 @@ describe("Main BattleShip Engine", function() {
                 battleShip.randomizeShips(gameData1);
                 battleShip.randomizeShips(gameData2);
 
-                const attackMessage: IMsgAttack = {
-                    id: "attack",
-                    x: -1,
-                    y: -1,
-                };
+                Promise.all([
+                    dataStore.save(gameData1.id, gameData1),
+                    dataStore.save(gameData2.id, gameData2),
+                ]).then(() => {
+                    const attackMessage: IMsgAttack = {
+                        id: "attack",
+                        sourcePlayerId: startGameData.playerList[0].id,
+                        targetPlayerId: startGameData.playerList[1].id,
+                        x: -1,
+                        y: -1,
+                    };
 
-                PubSub.Sub(pubSubMessages.ATTACK_RESPONSE, (msg: IMsgAttackResponse) => {
-                    assert.deepEqual(false, msg.isSuccess);
-                    done();
+                    PubSub.Sub(pubSubMessages.ATTACK_RESPONSE, (msg: IMsgAttackResponse) => {
+                        assert.deepEqual(false, msg.isSuccess);
+                        done();
+                    });
+
+                    battleShip.processMessage(attackMessage);
                 });
 
-                battleShip.processMessage(attackMessage);
             });
         });
     });
