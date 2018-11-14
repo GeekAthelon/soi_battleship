@@ -22,8 +22,7 @@ export interface IPlayer {
 }
 
 export interface IGameData {
+    data: IPlayer;
     id: string;
     startGameData: IStartGameData;
-    turnCount: number;
-    data: IPlayer;
 }

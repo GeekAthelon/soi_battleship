@@ -180,7 +180,6 @@ export function initGame(startGameData: IStartGameData, playerID: string) {
         },
         id: playerID,
         startGameData,
-        turnCount: 0,
     };
 
     PubSub.Sub(playerID, pubSubMessages.ATTACK_RESPONSE, (msg: IMsgAttackResponse) => {
