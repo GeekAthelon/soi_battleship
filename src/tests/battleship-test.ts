@@ -1,7 +1,6 @@
 /* tslint:disable:only-arrow-functions */
 
 import * as chai from "chai";
-import { CLIENT_RENEG_WINDOW } from "tls";
 import * as battleShip from "../app/battleship";
 import { IGameData, IPlayer, IStartGameData } from "../app/igamedata";
 import { IMsgAttack, IMsgAttackResponse, IMsgUpdateUI } from "../app/imessages";
