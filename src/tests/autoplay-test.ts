@@ -109,14 +109,9 @@ describe("Battleship Autoplay", function() {
                 return;
             }
 
-            let hasRunAttackResponse = false;
-            let hasRunUpdateGui = false;
+            const updateUiTests = () => {
+                PubSub.Unsub(attacker.id, pubSubMessages.UPDATE_UI, updateUiTests);
 
-            PubSub.Sub(attacker.id, pubSubMessages.UPDATE_UI, () => {
-                if (hasRunUpdateGui) {
-                    return;
-                }
-                hasRunUpdateGui = true;
                 if (action.isSuccess) {
                     // Swap players
                     attack(attackee, attacker, done);
@@ -124,17 +119,14 @@ describe("Battleship Autoplay", function() {
                     // Targed off board, don't change players.
                     attack(attacker, attackee, done);
                 }
-            });
+            };
 
-            PubSub.Sub(attacker.id, pubSubMessages.ATTACK_RESPONSE, (msg: IMsgAttackResponse) => {
+            const attackResponseTests = (msg: IMsgAttackResponse) => {
                 if (!action) {
                     throw new Error("ATTACK_RESPONSE - Action not OK");
                 }
 
-                if (hasRunAttackResponse) {
-                    return;
-                }
-                hasRunAttackResponse = true;
+                PubSub.Unsub(attacker.id, pubSubMessages.ATTACK_RESPONSE, attackResponseTests);
 
                 // console.log(battleShipTest.boardToNodeString(attackee.data.shipBoard, attackee));
                 assert.strictEqual(action.isSuccess, msg.isSuccess, "isSuccess");
@@ -143,7 +135,10 @@ describe("Battleship Autoplay", function() {
                 assert.strictEqual(action.sunkShip, msg.sunkShip, "sunkShip");
                 assert.strictEqual(action.x, msg.x, "x");
                 assert.strictEqual(action.y, msg.y, "y");
-            });
+            };
+
+            PubSub.Sub(attacker.id, pubSubMessages.UPDATE_UI, updateUiTests);
+            PubSub.Sub(attacker.id, pubSubMessages.ATTACK_RESPONSE, attackResponseTests);
 
             if (!action) {
                 throw new Error("NO ACTION");
