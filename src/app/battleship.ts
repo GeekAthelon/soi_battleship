@@ -144,9 +144,11 @@ export async function processMessage(recipient: string, gameMessage: IMessage.Ga
     // going through this routine.
     //
     // in a real multiplayer game, we wouldn't need recipient to filter the chatter.
+
     if (recipient !== gameMessage.targetPlayerId) {
         return;
     }
+
     const gameData = await dataStore.load(gameMessage.targetPlayerId);
 
     switch (gameMessage.id) {
