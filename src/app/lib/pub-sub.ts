@@ -1,3 +1,5 @@
+// tslint:disable:no-console
+
 // This code uses a two-part key
 // the 'ID' and the 'Name'.
 //
@@ -6,6 +8,8 @@
 //
 // I made the ID separate so that constant values could be used for
 // the name.
+
+const enableLogging = false;
 
 type ISubscription = (...args: any[]) => void;
 
@@ -20,6 +24,7 @@ const makeKeyName = (id: string, name: string) => `${id}:${name}`;
 
 export const Pub = (id: string, name: string, ...args: any[]) => {
     const key = makeKeyName(id, name);
+    if (enableLogging) { console.log("Publish to " + key); }
     if (!registry[key]) { return; }
     registry[key].forEach((x) => {
         x.apply(null, args);
@@ -28,6 +33,7 @@ export const Pub = (id: string, name: string, ...args: any[]) => {
 
 export const Sub = (id: string, name: string, fn: ISubscription) => {
     const key = makeKeyName(id, name);
+    if (enableLogging) { console.log("Subscribing to " + key); }
     if (!registry[key]) {
         registry[key] = [fn];
     } else {
@@ -49,6 +55,11 @@ export const Unsub = (id: string, name: string, fn: ISubscription) => {
     if (!list.length) {
         delete registry[key];
     }
+};
+
+export const UnsubByName = (id: string, name: string) => {
+    const key = makeKeyName(id, name);
+    delete registry[key];
 };
 
 export const UnsubAll = () => {
