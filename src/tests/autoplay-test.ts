@@ -3,14 +3,11 @@
 
 import * as chai from "chai";
 import * as battleShip from "../app/battleship";
-import { IGameData, IPlayer, IStartGameData } from "../app/igamedata";
+import { IGameData, IStartGameData } from "../app/igamedata";
 import { IMsgAttack, IMsgAttackResponse, IMsgUpdateUI } from "../app/imessages";
 import * as dataStore from "../app/lib/data-store";
 import * as PubSub from "../app/lib/pub-sub";
-import { range } from "../app/lib/range";
-import { colors } from "../app/lib/terminal-colors";
 import * as pubSubMessages from "../app/pub-sub-name";
-import * as battleShipTest from "./battleship-test";
 
 const assert = chai.assert;
 describe("Battleship Autoplay", function() {
@@ -45,7 +42,7 @@ describe("Battleship Autoplay", function() {
     };
 
     const initGameTest = () => {
-        return new Promise<IGameData[]>((resolve, reject) => {
+        return new Promise<IGameData[]>((resolve) => {
             const startGameData = getStartGameData();
             const gameData1 = battleShip.initGame(startGameData, startGameData.playerList[0].id);
             const gameData2 = battleShip.initGame(startGameData, startGameData.playerList[1].id);
@@ -91,26 +88,19 @@ describe("Battleship Autoplay", function() {
             { x: 2, y: 1, isSuccess: true, isHit: true, isSink: false, sunkShip: undefined },
         ];
 
-        let jjzCounter = 0;
         const attack = (
             attacker: IGameData,
             attackee: IGameData,
             done: () => void,
         ) => {
-            jjzCounter++;
-            // console.log(`***Attack Initiated: ${attacker.id} => ${attackee.id}`, `jjs:${jjzCounter}`);
-
             const turnList = (() => {
                 if (attacker.id === attacker.startGameData.playerList[0].id) {
-                    // console.log("turnList = player1", `jjs:${jjzCounter}`);
                     return player1Turns;
                 } else {
-                    // console.log("turnList = player2", `jjs:${jjzCounter}`);
                     return player2Turns;
                 }
             })();
 
-            // console.log(turnList);
             const action = turnList.shift();
             if (!action) {
                 assert.strictEqual(0, player1Turns.length, "Player1 turn queue is not empty");
@@ -119,33 +109,27 @@ describe("Battleship Autoplay", function() {
                 return;
             }
 
-            // console.log("Action defined:", `jjs:${jjzCounter}`, action);
             let hasRunAttackResponse = false;
             let hasRunUpdateGui = false;
 
-            PubSub.Sub(attacker.id, pubSubMessages.UPDATE_UI, (msg: IMsgUpdateUI) => {
-                // console.log("UPDATE_UI", `jjs:${jjzCounter}`);
+            PubSub.Sub(attacker.id, pubSubMessages.UPDATE_UI, () => {
                 if (hasRunUpdateGui) {
                     return;
                 }
                 hasRunUpdateGui = true;
-
                 if (action.isSuccess) {
-                    // console.log("Success-- counter attack", `jjs:${jjzCounter}`);
+                    // Swap players
                     attack(attackee, attacker, done);
                 } else {
-                    // console.log("Fail -- try next attack in list", `jjs:${jjzCounter}`);
+                    // Targed off board, don't change players.
                     attack(attacker, attackee, done);
                 }
             });
 
             PubSub.Sub(attacker.id, pubSubMessages.ATTACK_RESPONSE, (msg: IMsgAttackResponse) => {
-                // console.log("ATTACK_RESPONSE", `jjs:${jjzCounter}`);
                 if (!action) {
-                    throw new Error("ATTACK_RESPONS - Action not OK");
+                    throw new Error("ATTACK_RESPONSE - Action not OK");
                 }
-
-                // console.log(`hasRun: ${hasRunAttackResponse}`, `jjs:${jjzCounter}`);
 
                 if (hasRunAttackResponse) {
                     return;
@@ -163,8 +147,7 @@ describe("Battleship Autoplay", function() {
 
             if (!action) {
                 throw new Error("NO ACTION");
-            }
-            if (action) {
+            } else {
                 const attackMessage: IMsgAttack = {
                     id: "attack",
                     sourcePlayerId: attacker.id,
@@ -172,8 +155,6 @@ describe("Battleship Autoplay", function() {
                     x: action.x,
                     y: action.y,
                 };
-                // console.log("??");
-                // console.log(attackMessage);
                 battleShip.processMessage(attackee.id, attackMessage);
             }
         };
@@ -185,5 +166,4 @@ describe("Battleship Autoplay", function() {
             });
         });
     });
-
 });
