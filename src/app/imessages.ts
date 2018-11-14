@@ -6,6 +6,11 @@ export interface IMsgBase {
     sourcePlayerId: string;
 }
 
+export interface IMsgUpdateUI extends IMsgBase {
+    id: "update-ui";
+    gameData: IGameData;
+}
+
 export interface IMsgAttack extends IMsgBase {
     id: "attack";
     x: number;
@@ -31,6 +36,10 @@ export interface IMsgAttackResponse extends IMsgBase {
 
     // Whose turn?
     playerTurn: string;
+
+    // The coordinates of the attack
+    x: number;
+    y: number;
 }
 
-export type GameMessage = IMsgAttack | IMsgAttackResponse;
+export type GameMessage = IMsgAttack | IMsgAttackResponse | IMsgUpdateUI;

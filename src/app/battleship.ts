@@ -82,10 +82,19 @@ export function randomizeShips(gameData: IGameData) {
     });
 }
 
-async function handleAttack(gameData: IGameData, gameMessage: IMessage.IMsgAttack) {
+async function processAttackResponse(gameData: IGameData, gameMessage: IMessage.IMsgAttackResponse) {
+    if (!gameMessage.isSuccess) {
+        return;
+    }
+
+    const cellValue = gameMessage.isHit ? BoardCellType.hit : BoardCellType.miss;
+    gameData.data.targetBoard[gameMessage.x][gameMessage.y] = cellValue;
+}
+
+async function processAttack(gameData: IGameData, gameMessage: IMessage.IMsgAttack) {
     const cell = gameData.data.shipBoard[gameMessage.x] && gameData.data.shipBoard[gameMessage.x][gameMessage.y];
 
-    let responseMessage: IMsgAttackResponse = {
+    const responseMessage: IMsgAttackResponse = {
         id: "attack-response",
         isHit: false,
         isSink: false,
@@ -94,21 +103,17 @@ async function handleAttack(gameData: IGameData, gameMessage: IMessage.IMsgAttac
         sourcePlayerId: gameMessage.targetPlayerId,
         sunkShip: undefined,
         targetPlayerId: gameMessage.sourcePlayerId,
+        x: gameMessage.x,
+        y: gameMessage.y,
     };
 
     if (cell < gameData.startGameData.shipData.length) {
         // Hit a ship in an unhit-spot
     } else if (cell === BoardCellType.water) {
-        responseMessage = {
-            id: "attack-response",
-            isHit: false,
-            isSink: false,
-            isSuccess: true,
-            playerTurn: gameMessage.targetPlayerId,
-            sourcePlayerId: gameMessage.targetPlayerId,
-            sunkShip: undefined,
-            targetPlayerId: gameMessage.sourcePlayerId,
-        };
+        responseMessage.isSuccess = true;
+        responseMessage.playerTurn = gameMessage.targetPlayerId;
+
+        gameData.data.shipBoard[gameMessage.x][gameMessage.y] = BoardCellType.miss;
     } else {
         // Either hit a targetted spot alreada
         // Or, hit outside the game area
@@ -117,24 +122,44 @@ async function handleAttack(gameData: IGameData, gameMessage: IMessage.IMsgAttac
     return responseMessage;
 }
 
-export async function processMessage(gameMessage: IMessage.GameMessage) {
+function sendUpateUI(gameData: IGameData, gameMessage: IMessage.GameMessage) {
+    const updateUiMessage: IMessage.IMsgUpdateUI = {
+        gameData,
+        id: "update-ui",
+        sourcePlayerId: gameMessage.sourcePlayerId,
+        targetPlayerId: gameMessage.targetPlayerId,
+    };
+    PubSub.Pub(gameData.id, pubSubMessages.UPDATE_UI, updateUiMessage);
+}
+
+export async function processMessage(recipient: string, gameMessage: IMessage.GameMessage) {
+    // When running the test suite, we get activity from both player1 and player2
+    // going through this routine.
+    //
+    // in a real multiplayer game, we wouldn't need recipient to filter the chatter.
+    if (recipient !== gameMessage.targetPlayerId) {
+        return;
+    }
     const gameData = await dataStore.load(gameMessage.targetPlayerId);
-    let responseMessage: IMessage.GameMessage | undefined;
 
     switch (gameMessage.id) {
         case "attack":
-            responseMessage = await handleAttack(gameData, gameMessage);
+            const responseMessage = await processAttack(gameData, gameMessage);
+            if (responseMessage) {
+                PubSub.Pub(responseMessage.targetPlayerId, pubSubMessages.ATTACK_RESPONSE, responseMessage);
+            }
             break;
         case "attack-response":
+            await processAttackResponse(gameData, gameMessage);
+            break;
+        case "update-ui":
             break;
         default:
             throw new Error(gameMessage);
     }
 
     await dataStore.save(gameMessage.targetPlayerId, gameData);
-    if (responseMessage) {
-        PubSub.Pub(pubSubMessages.ATTACK_RESPONSE, responseMessage);
-    }
+    sendUpateUI(gameData, gameMessage);
 }
 
 export function initGame(startGameData: IStartGameData, playerID: string) {
@@ -149,5 +174,8 @@ export function initGame(startGameData: IStartGameData, playerID: string) {
         turnCount: 0,
     };
 
+    PubSub.Sub(playerID, pubSubMessages.ATTACK_RESPONSE, (msg: IMsgAttackResponse) => {
+        processMessage(playerID, msg);
+    });
     return gameData;
 }

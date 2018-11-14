@@ -1,3 +1,12 @@
+// This code uses a two-part key
+// the 'ID' and the 'Name'.
+//
+// The unit tests start two instances of the game to make a two-player gamme.
+// the ID makes sure that messages are routed to the correct place.
+//
+// I made the ID separate so that constant values could be used for
+// the name.
+
 type ISubscription = (...args: any[]) => void;
 
 interface IDictionary {
@@ -7,23 +16,28 @@ interface IDictionary {
 const registry: IDictionary = {
 };
 
-export const Pub = (name: string, ...args: any[]) => {
-    if (!registry[name]) { return; }
-    registry[name].forEach((x) => {
+const makeKeyName = (id: string, name: string) => `${id}:${name}`;
+
+export const Pub = (id: string, name: string, ...args: any[]) => {
+    const key = makeKeyName(id, name);
+    if (!registry[key]) { return; }
+    registry[key].forEach((x) => {
         x.apply(null, args);
     });
 };
 
-export const Sub = (name: string, fn: ISubscription) => {
-    if (!registry[name]) {
-        registry[name] = [fn];
+export const Sub = (id: string, name: string, fn: ISubscription) => {
+    const key = makeKeyName(id, name);
+    if (!registry[key]) {
+        registry[key] = [fn];
     } else {
-        registry[name].push(fn);
+        registry[key].push(fn);
     }
 };
 
-export const Unsub = (name: string, fn: ISubscription) => {
-    const list = registry[name];
+export const Unsub = (id: string, name: string, fn: ISubscription) => {
+    const key = makeKeyName(id, name);
+    const list = registry[key];
     if (!list) {
         return;
     }
@@ -33,7 +47,7 @@ export const Unsub = (name: string, fn: ISubscription) => {
         list.splice(idx, 1);
     }
     if (!list.length) {
-        delete registry[name];
+        delete registry[key];
     }
 };
 

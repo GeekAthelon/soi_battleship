@@ -4,6 +4,8 @@ import * as chai from "chai";
 const assert = chai.assert;
 
 describe("typescript-pubsub", () => {
+    const ID = "id";
+
     it("exists", () => {
         assert.ok(PubSub);
     });
@@ -11,12 +13,12 @@ describe("typescript-pubsub", () => {
     it("triggers", (done) => {
         const eventName = "trig1";
 
-        PubSub.Sub(eventName, (...args: any[]) => {
+        PubSub.Sub(ID, eventName, (...args: any[]) => {
             done();
         });
 
         const foo = () => {
-            PubSub.Pub(eventName, "a", "b");
+            PubSub.Pub(ID, eventName, "a", "b");
         };
 
         setTimeout(foo, 10);
@@ -33,14 +35,14 @@ describe("typescript-pubsub", () => {
             { prop: true },
         ];
 
-        PubSub.Sub(eventName, (...args: any[]) => {
+        PubSub.Sub(ID, eventName, (...args: any[]) => {
             assert.deepEqual([testData[received]], args);
             received++;
         });
 
         testData.forEach((d) => {
             setTimeout(() => {
-                PubSub.Pub(eventName, d);
+                PubSub.Pub(ID, eventName, d);
             }, 1);
 
         });
@@ -58,10 +60,10 @@ describe("typescript-pubsub", () => {
             counter++;
         };
 
-        PubSub.Sub(eventName, subF);
-        PubSub.Pub(eventName, "a", "b");
-        PubSub.Unsub(eventName, subF);
-        PubSub.Pub(eventName, "a", "b");
+        PubSub.Sub(ID, eventName, subF);
+        PubSub.Pub(ID, eventName, "a", "b");
+        PubSub.Unsub(ID, eventName, subF);
+        PubSub.Pub(ID, eventName, "a", "b");
 
         setTimeout(() => {
             assert.equal(1, counter);
@@ -77,10 +79,10 @@ describe("typescript-pubsub", () => {
             counter++;
         };
 
-        PubSub.Sub(eventName, subF);
-        PubSub.Pub(eventName, "a", "b");
+        PubSub.Sub(ID, eventName, subF);
+        PubSub.Pub(ID, eventName, "a", "b");
         PubSub.UnsubAll();
-        PubSub.Pub(eventName, "a", "b");
+        PubSub.Pub(ID, eventName, "a", "b");
 
         setTimeout(() => {
             assert.equal(1, counter);
