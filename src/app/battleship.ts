@@ -108,7 +108,14 @@ async function processAttack(gameData: IGameData, gameMessage: IMessage.IMsgAtta
     };
 
     if (cell < gameData.startGameData.shipData.length) {
-        // Hit a ship in an unhit-spot
+        responseMessage.isSuccess = true;
+        responseMessage.isHit = true;
+        responseMessage.playerTurn = gameMessage.targetPlayerId;
+        gameData.data.shipHitPoints[cell]--;
+        responseMessage.isSink = gameData.data.shipHitPoints[cell] === 0;
+        responseMessage.sunkShip = responseMessage.isSink ? cell : undefined;
+
+        gameData.data.shipBoard[gameMessage.x][gameMessage.y] = BoardCellType.hit;
     } else if (cell === BoardCellType.water) {
         responseMessage.isSuccess = true;
         responseMessage.playerTurn = gameMessage.targetPlayerId;

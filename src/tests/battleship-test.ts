@@ -34,6 +34,7 @@ describe("Main BattleShip Engine", function() {
             { id: 4, color: colors.Bright + colors.FgBlack, symbol: "o" },
             { id: battleShip.BoardCellType.water, color: colors.Bright + colors.FgBlack, symbol: "~" },
             { id: battleShip.BoardCellType.miss, color: colors.Bright + colors.FgWhite, symbol: "o" },
+            { id: battleShip.BoardCellType.hit, color: colors.Bright + colors.FgRed, symbol: "x" },
         ];
         const def: INodePrettyPrint = { id: -1, color: colors.Bright + colors.FgWhite, symbol: "?" };
 
@@ -193,8 +194,6 @@ describe("Main BattleShip Engine", function() {
                     } else {
                         testBoardValid(gameData.data.shipBoard, gameData);
                     }
-
-                    // console.log(boardToNodeString(gameData.player1.shipBoard,gameData))
                 });
             });
         });
@@ -207,8 +206,6 @@ describe("Main BattleShip Engine", function() {
                     const gameData = battleShip.initGame(startGameData, startGameData.playerList[0].id);
                     battleShip.randomizeShips(gameData);
                     testBoardValid(gameData.data.shipBoard, gameData);
-
-                    // console.log(boardToNodeString(gameData.player1.shipBoard, gameData));
 
                     const found = new Map();
                     for (const x of range(0, startGameData.boardWidth - 1)) {
@@ -349,6 +346,71 @@ describe("Main BattleShip Engine", function() {
                     battleShip.processMessage(attackee.id, attackMessage);
                 });
             });
+
+            it("Attacking a ship is returns correct response and sets target board", function(done) {
+                initGameTest().then((res) => {
+                    const [attacker, attackee] = res;
+
+                    const x = 0;
+                    const y = 0;
+
+                    const attackMessage: IMsgAttack = {
+                        id: "attack",
+                        sourcePlayerId: attacker.startGameData.playerList[0].id,
+                        targetPlayerId: attackee.startGameData.playerList[1].id,
+                        x,
+                        y,
+                    };
+
+                    let neededEventCount = 3;
+
+                    const isDone = () => {
+                        neededEventCount--;
+                        if (neededEventCount < 0) {
+                            throw new Error("ACK... isDone called too many times");
+                        }
+                        if (neededEventCount === 0) {
+                            done();
+                        }
+                    };
+
+                    PubSub.Sub(attackee.id, pubSubMessages.UPDATE_UI, (msg: IMsgUpdateUI) => {
+                        const loadedData2 = msg.gameData;
+                        const cell2 = loadedData2.data.shipBoard[x][y];
+
+                        const startGameData = getStartGameData();
+
+                        // console.log(boardToNodeString(loadedData2.data.shipBoard, loadedData2));
+
+                        assert.strictEqual(battleShip.BoardCellType.hit, cell2, "cell2");
+                        assert.notStrictEqual(startGameData.shipData[0].size, loadedData2.data.shipHitPoints[0]);
+                        isDone();
+                    });
+
+                    PubSub.Sub(attacker.id, pubSubMessages.UPDATE_UI, (msg: IMsgUpdateUI) => {
+                        const loadedData1 = msg.gameData;
+                        const cell1 = loadedData1.data.targetBoard[x][y];
+
+                        assert.strictEqual(battleShip.BoardCellType.hit, cell1, "cell1");
+                        isDone();
+                    });
+
+                    PubSub.Sub(attacker.id, pubSubMessages.ATTACK_RESPONSE, (msg: IMsgAttackResponse) => {
+                        assert.strictEqual(true, msg.isSuccess, "isSuccess");
+                        assert.strictEqual(true, msg.isHit, "isHit");
+                        assert.strictEqual(false, msg.isSink, "isSink");
+                        assert.strictEqual(undefined, msg.sunkShip, "sunkShip");
+                        assert.strictEqual(attackee.id, msg.playerTurn, "playerTurn");
+                        assert.strictEqual(x, msg.x, "x");
+                        assert.strictEqual(y, msg.y, "y");
+
+                        isDone();
+                    });
+
+                    battleShip.processMessage(attackee.id, attackMessage);
+                });
+            });
+
         });
     });
 });
