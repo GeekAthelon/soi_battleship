@@ -225,39 +225,63 @@ describe("Main BattleShip Engine", function() {
             });
         });
 
-        describe("IMsgAttack", function() {
+        describe.only("IMsgAttack", function() {
+            const manuallyPlaceShips = (gameData: IGameData) => {
+                for (let i = 0; i < gameData.startGameData.shipData.length; i++) {
+                    const isValid = battleShip.tryPlaceShip(
+                        gameData.startGameData.shipData, i, i * 2, 0, "v", gameData.data.shipBoard);
+                    if (!isValid) {
+                        throw new Error("Could not manually place ships.");
+                    }
+                }
+            };
+
+            const initGameTest = () => {
+                return new Promise<IGameData[]>((resolve, reject) => {
+                    const startGameData = getStartGameData();
+                    const gameData1 = battleShip.initGame(startGameData, startGameData.playerList[0].id);
+                    const gameData2 = battleShip.initGame(startGameData, startGameData.playerList[1].id);
+
+                    manuallyPlaceShips(gameData1);
+                    manuallyPlaceShips(gameData2);
+
+                    // console.log(boardToNodeString(gameData1.data.shipBoard, gameData1));
+
+                    Promise.all([
+                        dataStore.save(gameData1.id, gameData1),
+                        dataStore.save(gameData2.id, gameData2),
+                    ]).then(() => {
+                        resolve([
+                            gameData1,
+                            gameData2,
+                        ]);
+                    });
+                });
+            };
+
             this.beforeEach(() => {
                 PubSub.UnsubAll();
             });
 
             it("Attacking outside the board unsuccessful", function(done) {
-                const startGameData = getStartGameData();
-                const gameData1 = battleShip.initGame(startGameData, startGameData.playerList[0].id);
-                const gameData2 = battleShip.initGame(startGameData, startGameData.playerList[1].id);
+                initGameTest().then((res) => {
+                    const [gameData1, gameData2] = res;
 
-                battleShip.randomizeShips(gameData1);
-                battleShip.randomizeShips(gameData2);
-
-                Promise.all([
-                    dataStore.save(gameData1.id, gameData1),
-                    dataStore.save(gameData2.id, gameData2),
-                ]).then(() => {
                     const attackMessage: IMsgAttack = {
                         id: "attack",
-                        sourcePlayerId: startGameData.playerList[0].id,
-                        targetPlayerId: startGameData.playerList[1].id,
+                        sourcePlayerId: gameData1.startGameData.playerList[0].id,
+                        targetPlayerId: gameData2.startGameData.playerList[1].id,
                         x: -1,
                         y: -1,
                     };
 
                     PubSub.Sub(pubSubMessages.ATTACK_RESPONSE, (msg: IMsgAttackResponse) => {
-                        assert.deepEqual(false, msg.isSuccess);
+                        assert.strictEqual(false, msg.isSuccess);
                         done();
                     });
 
                     battleShip.processMessage(attackMessage);
                 });
-
             });
         });
     });
