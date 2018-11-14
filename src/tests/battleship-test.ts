@@ -277,12 +277,39 @@ describe("Main BattleShip Engine", function() {
 
                     PubSub.Sub(pubSubMessages.ATTACK_RESPONSE, (msg: IMsgAttackResponse) => {
                         assert.strictEqual(false, msg.isSuccess);
+                        assert.strictEqual(gameData1.id, msg.playerTurn);
                         done();
                     });
 
                     battleShip.processMessage(attackMessage);
                 });
             });
+
+            it("Attacking water is returns correct response", function(done) {
+                initGameTest().then((res) => {
+                    const [gameData1, gameData2] = res;
+
+                    const attackMessage: IMsgAttack = {
+                        id: "attack",
+                        sourcePlayerId: gameData1.startGameData.playerList[0].id,
+                        targetPlayerId: gameData2.startGameData.playerList[1].id,
+                        x: gameData2.startGameData.boardWidth - 1,
+                        y: gameData2.startGameData.boardHeight - 1,
+                    };
+
+                    PubSub.Sub(pubSubMessages.ATTACK_RESPONSE, (msg: IMsgAttackResponse) => {
+                        assert.strictEqual(true, msg.isSuccess);
+                        assert.strictEqual(false, msg.isHit);
+                        assert.strictEqual(false, msg.isSink);
+                        assert.strictEqual(undefined, msg.sunkShip);
+                        assert.strictEqual(gameData2.id, msg.playerTurn);
+                        done();
+                    });
+
+                    battleShip.processMessage(attackMessage);
+                });
+            });
+
         });
     });
 });

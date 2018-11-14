@@ -85,7 +85,7 @@ export function randomizeShips(gameData: IGameData) {
 async function handleAttack(gameData: IGameData, gameMessage: IMessage.IMsgAttack) {
     const cell = gameData.data.shipBoard[gameMessage.x] && gameData.data.shipBoard[gameMessage.x][gameMessage.y];
 
-    const responseMessage: IMsgAttackResponse = {
+    let responseMessage: IMsgAttackResponse = {
         id: "attack-response",
         isHit: false,
         isSink: false,
@@ -99,7 +99,16 @@ async function handleAttack(gameData: IGameData, gameMessage: IMessage.IMsgAttac
     if (cell < gameData.startGameData.shipData.length) {
         // Hit a ship in an unhit-spot
     } else if (cell === BoardCellType.water) {
-        // Hit water
+        responseMessage = {
+            id: "attack-response",
+            isHit: false,
+            isSink: false,
+            isSuccess: true,
+            playerTurn: gameMessage.targetPlayerId,
+            sourcePlayerId: gameMessage.targetPlayerId,
+            sunkShip: undefined,
+            targetPlayerId: gameMessage.sourcePlayerId,
+        };
     } else {
         // Either hit a targetted spot alreada
         // Or, hit outside the game area
