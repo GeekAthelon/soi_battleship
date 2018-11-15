@@ -10,6 +10,12 @@ export interface IMessageTypePong extends IMessageTypeBase {
     type: "PONG";
 }
 
+export interface IMessageListenFirebaseChange extends IMessageTypeBase {
+    type: "FIREBASE-LISTEN-FOR-VALUE";
+    key: string;
+    value: string;
+}
+
 const postMessage = (dest: Window, msg: any) => {
     const s = JSON.stringify(msg);
     dest.postMessage(s, "*");
@@ -29,4 +35,16 @@ export const Pong = (dest: Window) => {
     postMessage(dest, msg);
 };
 
-export type MessageType = IMessageTypePing | IMessageTypePong;
+export const ListenForValue = (key: string, value: string, dest: Window) => {
+    const msg: IMessageListenFirebaseChange = {
+        key,
+        type: "FIREBASE-LISTEN-FOR-VALUE",
+        value,
+    };
+    postMessage(dest, msg);
+};
+
+export type MessageType = IMessageTypePing |
+    IMessageTypePong |
+    IMessageListenFirebaseChange
+    ;

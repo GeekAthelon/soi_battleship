@@ -21,12 +21,12 @@ var config = {
   },
   plugins: [
     new WebpackShellPlugin({
-      onBuildExit: "start dist/mocha.html"
+    //  onBuildExit: "start dist/mocha.html"
     }),
     new HtmlWebpackPlugin(
       {
         template: path.resolve(__dirname, 'src', 'app', 'mocha.html'),
-        filename: "mocha.html",
+        filename: "index.html",
         chunks: ['a', 'vendor'],
         inject: true
       },

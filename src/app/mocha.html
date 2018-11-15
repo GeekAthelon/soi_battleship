@@ -26,13 +26,12 @@
     <script>
         function initMocha() {
             document.getElementById("mocha").innerHTML = "";
-            console.log("Starting tests...");
-
             mocha.checkLeaks();
             mocha.run();
         }
 
-        document.addEventListener("DOMContentLoaded", function (event) {
+        var myIframe = document.getElementById("iframe-echo")
+        myIframe.addEventListener("load", function () {
             setTimeout(initMocha, 10 * 1);
         });
     </script>
