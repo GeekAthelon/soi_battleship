@@ -7,7 +7,7 @@ import { amInBrowser } from "./am-in-browser";
 
 const assert = chai.assert;
 
-describe.only(`browser postMessage examples: Running ${amInBrowser()}`, function() {
+describe(`browser postMessage examples: Running ${amInBrowser()}`, function() {
 
     type MessageListenerHandler = (event: MessageEvent) => void;
 
@@ -15,6 +15,17 @@ describe.only(`browser postMessage examples: Running ${amInBrowser()}`, function
     const addMessageListener = (callback: MessageListenerHandler) => {
         eventList.push(callback);
         window.addEventListener("message", callback, false);
+    };
+    const getNewIframe = () => {
+        return new Promise<HTMLIFrameElement>((resolve, reject) => {
+            const iframeHome = document.getElementById("mocha-iframe-home") as HTMLDivElement;
+            const iframe = document.createElement("iframe");
+            iframe.addEventListener("load", () => {
+                resolve(iframe);
+            });
+            iframe.src = "mocha-iframe.html";
+            iframeHome.appendChild(iframe);
+        });
     };
 
     this.afterEach(function() {
@@ -30,49 +41,53 @@ describe.only(`browser postMessage examples: Running ${amInBrowser()}`, function
 
     if (amInBrowser()) {
         describe("postMessage", function() {
-            it("should get pong", (done) => {
-                const iframe = document.querySelector("#iframe-echo") as HTMLIFrameElement;
+            it("should get pong", () => {
+                return new Promise((resolve, reject) => {
+                    (async () => {
+                        const iframe = await getNewIframe();
 
-                addMessageListener((event: MessageEvent) => {
-                    const msg = JSON.parse(event.data) as postMessage.IMessageTypePong;
-                    if (msg.type === "PONG") {
-                        done();
-                    }
+                        addMessageListener((event: MessageEvent) => {
+                            const msg = JSON.parse(event.data) as postMessage.IMessageTypePong;
+                            if (msg.type === "PONG") {
+                                resolve();
+                            }
+                        });
+
+                        assert.notStrictEqual(typeof window, "");
+                        postMessage.Ping(iframe.contentWindow!);
+                    })();
                 });
-
-                assert.notStrictEqual(typeof window, "");
-                postMessage.Ping(iframe.contentWindow!);
             });
         });
 
         describe("firebase", function() {
-            it("should get pong", (done) => {
-                this.timeout(20 * 1000);
+            it("should get pong", () => {
+                return new Promise((resolve, reject) => {
+                    (async () => {
+                        const iframe = await getNewIframe();
+                        const testKey = "soi-unittest-key";
 
-                const iframe = document.querySelector("#iframe-echo") as HTMLIFrameElement;
-                const testKey = "soi-unittest-key";
+                        const db = await initFirebase();
 
-                initFirebase().then((db) => {
-                    const testKeyReferenceObject = db.ref().child(testKey);
-                    const onlineReferenceObject = db.ref().child("online/unit-test");
+                        const testKeyReferenceObject = db.ref().child(testKey);
+                        const onlineReferenceObject = db.ref().child("online/unit-test");
 
-                    const testValue = "" + new Date().getTime();
+                        const testValue = "" + new Date().getTime();
 
-                    addMessageListener((event: MessageEvent) => {
-                        const msg = JSON.parse(event.data) as postMessage.IMessageTypePong;
-                        if (msg.type === "PONG") {
-                            done();
-                        }
-                    });
+                        addMessageListener((event: MessageEvent) => {
+                            const msg = JSON.parse(event.data) as postMessage.IMessageTypePong;
+                            if (msg.type === "PONG") {
+                                resolve();
+                            }
+                        });
 
-                    postMessage.ListenForValue(testKey, testValue, iframe.contentWindow!);
-
-                    onlineReferenceObject.onDisconnect().remove();
-
-                    testKeyReferenceObject.set(testValue);
-                    onlineReferenceObject.set("online" + testValue);
-
+                        postMessage.ListenForValue(testKey, testValue, iframe.contentWindow!);
+                        onlineReferenceObject.onDisconnect().remove();
+                        testKeyReferenceObject.set(testValue);
+                        onlineReferenceObject.set("online" + testValue);
+                    })();
                 });
+
             });
         });
 

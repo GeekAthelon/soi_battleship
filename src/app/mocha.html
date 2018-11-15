@@ -6,15 +6,13 @@
     <link href="https://unpkg.com/mocha@5.2.0/mocha.css" rel="stylesheet" />
 
     <style>
-        iframe {
-            width: calc(90vw);
-            height: calc(20vh);
-        }
     </style>
 </head>
 
 <body>
-    <iframe id='iframe-echo' src="mocha-iframe.html"></iframe>
+    <div id="mocha-iframe-home">
+
+    </div>
 
     <div id="mocha">
         Loading
@@ -29,9 +27,7 @@
             mocha.checkLeaks();
             mocha.run();
         }
-
-        var myIframe = document.getElementById("iframe-echo")
-        myIframe.addEventListener("load", function () {
+        window.addEventListener("load", function () {
             setTimeout(initMocha, 10 * 1);
         });
     </script>
