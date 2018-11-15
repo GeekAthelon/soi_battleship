@@ -261,218 +261,227 @@ describe("Main BattleShip Engine", function() {
                 PubSub.UnsubAll();
             });
 
-            it("Attacking outside the board unsuccessful", function(done) {
-                initGameTest().then((res) => {
-                    const [gameData1, gameData2] = res;
+            it("Attacking outside the board unsuccessful", function() {
+                return new Promise((resolve, reject) => {
+                    (async () => {
+                        const [gameData1, gameData2] = await initGameTest();
 
-                    const x = -1;
-                    const y = -2;
+                        const x = -1;
+                        const y = -2;
 
-                    const attackMessage: IMsgAttack = {
-                        id: "attack",
-                        sourcePlayerId: gameData1.startGameData.playerList[0].id,
-                        targetPlayerId: gameData2.startGameData.playerList[1].id,
-                        x,
-                        y,
-                    };
+                        const attackMessage: IMsgAttack = {
+                            id: "attack",
+                            sourcePlayerId: gameData1.startGameData.playerList[0].id,
+                            targetPlayerId: gameData2.startGameData.playerList[1].id,
+                            x,
+                            y,
+                        };
 
-                    PubSub.Sub(gameData1.id, pubSubMessages.ATTACK_RESPONSE, (msg: IMsgAttackResponse) => {
-                        assert.strictEqual(false, msg.isSuccess);
-                        assert.strictEqual(gameData1.id, msg.playerTurn);
-                        assert.strictEqual(x, msg.x);
-                        assert.strictEqual(y, msg.y);
+                        PubSub.Sub(gameData1.id, pubSubMessages.ATTACK_RESPONSE, (msg: IMsgAttackResponse) => {
+                            assert.strictEqual(false, msg.isSuccess);
+                            assert.strictEqual(gameData1.id, msg.playerTurn);
+                            assert.strictEqual(x, msg.x);
+                            assert.strictEqual(y, msg.y);
 
-                        done();
-                    });
+                            resolve();
+                        });
 
-                    battleShip.processMessage(gameData2.id, attackMessage);
+                        battleShip.processMessage(gameData2.id, attackMessage);
+                    })();
+                });
+
+            });
+
+            it("Attacking water is returns correct response and sets target board", function() {
+                return new Promise((resolve, reject) => {
+                    (async () => {
+                        const [attacker, attackee] = await initGameTest();
+
+                        const x = attackee.startGameData.boardWidth - 1;
+                        const y = attackee.startGameData.boardHeight - 1;
+
+                        const attackMessage: IMsgAttack = {
+                            id: "attack",
+                            sourcePlayerId: attacker.startGameData.playerList[0].id,
+                            targetPlayerId: attackee.startGameData.playerList[1].id,
+                            x,
+                            y,
+                        };
+
+                        let neededEventCount = 3;
+
+                        const isDone = () => {
+                            neededEventCount--;
+                            if (neededEventCount < 0) {
+                                throw new Error("ACK... isDone called too many times");
+                            }
+                            if (neededEventCount === 0) {
+                                resolve();
+                            }
+                        };
+
+                        PubSub.Sub(attackee.id, pubSubMessages.UPDATE_UI, (msg: IMsgUpdateUI) => {
+                            const loadedData2 = msg.gameData;
+                            const cell2 = loadedData2.data.shipBoard[x][y];
+
+                            assert.strictEqual(battleShip.BoardCellType.miss, cell2, "cell2");
+                            isDone();
+                        });
+
+                        PubSub.Sub(attacker.id, pubSubMessages.UPDATE_UI, (msg: IMsgUpdateUI) => {
+                            const loadedData1 = msg.gameData;
+                            const cell1 = loadedData1.data.targetBoard[x][y];
+
+                            assert.strictEqual(battleShip.BoardCellType.miss, cell1, "cell1");
+                            isDone();
+                        });
+
+                        PubSub.Sub(attacker.id, pubSubMessages.ATTACK_RESPONSE, (msg: IMsgAttackResponse) => {
+                            assert.strictEqual(true, msg.isSuccess, "isSuccess");
+                            assert.strictEqual(false, msg.isHit, "isHit");
+                            assert.strictEqual(false, msg.isSink, "isSink");
+                            assert.strictEqual(undefined, msg.sunkShip, "sunkShip");
+                            assert.strictEqual(attackee.id, msg.playerTurn, "playerTurn");
+                            assert.strictEqual(x, msg.x, "x");
+                            assert.strictEqual(y, msg.y, "y");
+
+                            isDone();
+                        });
+
+                        battleShip.processMessage(attackee.id, attackMessage);
+                    })();
                 });
             });
 
-            it("Attacking water is returns correct response and sets target board", function(done) {
-                initGameTest().then((res) => {
-                    const [attacker, attackee] = res;
+            it("Attacking a ship is returns correct response and sets target board", function() {
+                return new Promise((resolve, reject) => {
+                    (async () => {
+                        const [attacker, attackee] = await initGameTest();
 
-                    const x = attackee.startGameData.boardWidth - 1;
-                    const y = attackee.startGameData.boardHeight - 1;
+                        const x = 0;
+                        const y = 0;
 
-                    const attackMessage: IMsgAttack = {
-                        id: "attack",
-                        sourcePlayerId: attacker.startGameData.playerList[0].id,
-                        targetPlayerId: attackee.startGameData.playerList[1].id,
-                        x,
-                        y,
-                    };
+                        const attackMessage: IMsgAttack = {
+                            id: "attack",
+                            sourcePlayerId: attacker.startGameData.playerList[0].id,
+                            targetPlayerId: attackee.startGameData.playerList[1].id,
+                            x,
+                            y,
+                        };
 
-                    let neededEventCount = 3;
+                        let neededEventCount = 3;
 
-                    const isDone = () => {
-                        neededEventCount--;
-                        if (neededEventCount < 0) {
-                            throw new Error("ACK... isDone called too many times");
-                        }
-                        if (neededEventCount === 0) {
-                            done();
-                        }
-                    };
+                        const isDone = () => {
+                            neededEventCount--;
+                            if (neededEventCount < 0) {
+                                throw new Error("ACK... isDone called too many times");
+                            }
+                            if (neededEventCount === 0) {
+                                resolve();
+                            }
+                        };
 
-                    PubSub.Sub(attackee.id, pubSubMessages.UPDATE_UI, (msg: IMsgUpdateUI) => {
-                        const loadedData2 = msg.gameData;
-                        const cell2 = loadedData2.data.shipBoard[x][y];
+                        PubSub.Sub(attackee.id, pubSubMessages.UPDATE_UI, (msg: IMsgUpdateUI) => {
+                            const loadedData2 = msg.gameData;
+                            const cell2 = loadedData2.data.shipBoard[x][y];
 
-                        assert.strictEqual(battleShip.BoardCellType.miss, cell2, "cell2");
-                        isDone();
-                    });
+                            const startGameData = getStartGameData();
 
-                    PubSub.Sub(attacker.id, pubSubMessages.UPDATE_UI, (msg: IMsgUpdateUI) => {
-                        const loadedData1 = msg.gameData;
-                        const cell1 = loadedData1.data.targetBoard[x][y];
+                            // console.log(boardToNodeString(loadedData2.data.shipBoard, loadedData2));
 
-                        assert.strictEqual(battleShip.BoardCellType.miss, cell1, "cell1");
-                        isDone();
-                    });
+                            assert.strictEqual(battleShip.BoardCellType.hit, cell2, "cell2");
+                            assert.notStrictEqual(startGameData.shipData[0].size, loadedData2.data.shipHitPoints[0]);
+                            isDone();
+                        });
 
-                    PubSub.Sub(attacker.id, pubSubMessages.ATTACK_RESPONSE, (msg: IMsgAttackResponse) => {
-                        assert.strictEqual(true, msg.isSuccess, "isSuccess");
-                        assert.strictEqual(false, msg.isHit, "isHit");
-                        assert.strictEqual(false, msg.isSink, "isSink");
-                        assert.strictEqual(undefined, msg.sunkShip, "sunkShip");
-                        assert.strictEqual(attackee.id, msg.playerTurn, "playerTurn");
-                        assert.strictEqual(x, msg.x, "x");
-                        assert.strictEqual(y, msg.y, "y");
+                        PubSub.Sub(attacker.id, pubSubMessages.UPDATE_UI, (msg: IMsgUpdateUI) => {
+                            const loadedData1 = msg.gameData;
+                            const cell1 = loadedData1.data.targetBoard[x][y];
 
-                        isDone();
-                    });
+                            assert.strictEqual(battleShip.BoardCellType.hit, cell1, "cell1");
+                            isDone();
+                        });
 
-                    battleShip.processMessage(attackee.id, attackMessage);
+                        PubSub.Sub(attacker.id, pubSubMessages.ATTACK_RESPONSE, (msg: IMsgAttackResponse) => {
+                            assert.strictEqual(true, msg.isSuccess, "isSuccess");
+                            assert.strictEqual(true, msg.isHit, "isHit");
+                            assert.strictEqual(false, msg.isSink, "isSink");
+                            assert.strictEqual(undefined, msg.sunkShip, "sunkShip");
+                            assert.strictEqual(attackee.id, msg.playerTurn, "playerTurn");
+                            assert.strictEqual(x, msg.x, "x");
+                            assert.strictEqual(y, msg.y, "y");
+
+                            isDone();
+                        });
+
+                        battleShip.processMessage(attackee.id, attackMessage);
+                    })();
                 });
             });
 
-            it("Attacking a ship is returns correct response and sets target board", function(done) {
-                initGameTest().then((res) => {
-                    const [attacker, attackee] = res;
+            it("Attacking (and sinking) a ship is returns correct response and sets target board", function() {
+                return new Promise((resolve, reject) => {
+                    (async () => {
+                        const [attacker, attackee] = await initGameTest();
 
-                    const x = 0;
-                    const y = 0;
+                        const x = 10;
+                        const y = 0;
 
-                    const attackMessage: IMsgAttack = {
-                        id: "attack",
-                        sourcePlayerId: attacker.startGameData.playerList[0].id,
-                        targetPlayerId: attackee.startGameData.playerList[1].id,
-                        x,
-                        y,
-                    };
+                        const attackMessage: IMsgAttack = {
+                            id: "attack",
+                            sourcePlayerId: attacker.startGameData.playerList[0].id,
+                            targetPlayerId: attackee.startGameData.playerList[1].id,
+                            x,
+                            y,
+                        };
 
-                    let neededEventCount = 3;
+                        let neededEventCount = 3;
 
-                    const isDone = () => {
-                        neededEventCount--;
-                        if (neededEventCount < 0) {
-                            throw new Error("ACK... isDone called too many times");
-                        }
-                        if (neededEventCount === 0) {
-                            done();
-                        }
-                    };
+                        const isDone = () => {
+                            neededEventCount--;
+                            if (neededEventCount < 0) {
+                                throw new Error("ACK... isDone called too many times");
+                            }
+                            if (neededEventCount === 0) {
+                                resolve();
+                            }
+                        };
 
-                    PubSub.Sub(attackee.id, pubSubMessages.UPDATE_UI, (msg: IMsgUpdateUI) => {
-                        const loadedData2 = msg.gameData;
-                        const cell2 = loadedData2.data.shipBoard[x][y];
+                        PubSub.Sub(attackee.id, pubSubMessages.UPDATE_UI, (msg: IMsgUpdateUI) => {
+                            const loadedData2 = msg.gameData;
+                            const cell2 = loadedData2.data.shipBoard[x][y];
 
-                        const startGameData = getStartGameData();
+                            const startGameData = getStartGameData();
 
-                        // console.log(boardToNodeString(loadedData2.data.shipBoard, loadedData2));
+                            // console.log(boardToNodeString(loadedData2.data.shipBoard, loadedData2));
 
-                        assert.strictEqual(battleShip.BoardCellType.hit, cell2, "cell2");
-                        assert.notStrictEqual(startGameData.shipData[0].size, loadedData2.data.shipHitPoints[0]);
-                        isDone();
-                    });
+                            assert.strictEqual(battleShip.BoardCellType.hit, cell2, "cell2");
+                            assert.strictEqual(0, loadedData2.data.shipHitPoints[5], "ship hit points");
+                            isDone();
+                        });
 
-                    PubSub.Sub(attacker.id, pubSubMessages.UPDATE_UI, (msg: IMsgUpdateUI) => {
-                        const loadedData1 = msg.gameData;
-                        const cell1 = loadedData1.data.targetBoard[x][y];
+                        PubSub.Sub(attacker.id, pubSubMessages.UPDATE_UI, (msg: IMsgUpdateUI) => {
+                            const loadedData1 = msg.gameData;
+                            const cell1 = loadedData1.data.targetBoard[x][y];
 
-                        assert.strictEqual(battleShip.BoardCellType.hit, cell1, "cell1");
-                        isDone();
-                    });
+                            assert.strictEqual(battleShip.BoardCellType.hit, cell1, "cell1");
+                            isDone();
+                        });
 
-                    PubSub.Sub(attacker.id, pubSubMessages.ATTACK_RESPONSE, (msg: IMsgAttackResponse) => {
-                        assert.strictEqual(true, msg.isSuccess, "isSuccess");
-                        assert.strictEqual(true, msg.isHit, "isHit");
-                        assert.strictEqual(false, msg.isSink, "isSink");
-                        assert.strictEqual(undefined, msg.sunkShip, "sunkShip");
-                        assert.strictEqual(attackee.id, msg.playerTurn, "playerTurn");
-                        assert.strictEqual(x, msg.x, "x");
-                        assert.strictEqual(y, msg.y, "y");
+                        PubSub.Sub(attacker.id, pubSubMessages.ATTACK_RESPONSE, (msg: IMsgAttackResponse) => {
+                            assert.strictEqual(true, msg.isSuccess, "isSuccess");
+                            assert.strictEqual(true, msg.isHit, "isHit");
+                            assert.strictEqual(true, msg.isSink, "isSink");
+                            assert.strictEqual(5, msg.sunkShip, "sunkShip");
+                            assert.strictEqual(attackee.id, msg.playerTurn, "playerTurn");
+                            assert.strictEqual(x, msg.x, "x");
+                            assert.strictEqual(y, msg.y, "y");
 
-                        isDone();
-                    });
+                            isDone();
+                        });
 
-                    battleShip.processMessage(attackee.id, attackMessage);
-                });
-            });
-
-            it("Attacking (and sinking) a ship is returns correct response and sets target board", function(done) {
-                initGameTest().then((res) => {
-                    const [attacker, attackee] = res;
-
-                    const x = 10;
-                    const y = 0;
-
-                    const attackMessage: IMsgAttack = {
-                        id: "attack",
-                        sourcePlayerId: attacker.startGameData.playerList[0].id,
-                        targetPlayerId: attackee.startGameData.playerList[1].id,
-                        x,
-                        y,
-                    };
-
-                    let neededEventCount = 3;
-
-                    const isDone = () => {
-                        neededEventCount--;
-                        if (neededEventCount < 0) {
-                            throw new Error("ACK... isDone called too many times");
-                        }
-                        if (neededEventCount === 0) {
-                            done();
-                        }
-                    };
-
-                    PubSub.Sub(attackee.id, pubSubMessages.UPDATE_UI, (msg: IMsgUpdateUI) => {
-                        const loadedData2 = msg.gameData;
-                        const cell2 = loadedData2.data.shipBoard[x][y];
-
-                        const startGameData = getStartGameData();
-
-                        // console.log(boardToNodeString(loadedData2.data.shipBoard, loadedData2));
-
-                        assert.strictEqual(battleShip.BoardCellType.hit, cell2, "cell2");
-                        assert.strictEqual(0, loadedData2.data.shipHitPoints[5], "ship hit points");
-                        isDone();
-                    });
-
-                    PubSub.Sub(attacker.id, pubSubMessages.UPDATE_UI, (msg: IMsgUpdateUI) => {
-                        const loadedData1 = msg.gameData;
-                        const cell1 = loadedData1.data.targetBoard[x][y];
-
-                        assert.strictEqual(battleShip.BoardCellType.hit, cell1, "cell1");
-                        isDone();
-                    });
-
-                    PubSub.Sub(attacker.id, pubSubMessages.ATTACK_RESPONSE, (msg: IMsgAttackResponse) => {
-                        assert.strictEqual(true, msg.isSuccess, "isSuccess");
-                        assert.strictEqual(true, msg.isHit, "isHit");
-                        assert.strictEqual(true, msg.isSink, "isSink");
-                        assert.strictEqual(5, msg.sunkShip, "sunkShip");
-                        assert.strictEqual(attackee.id, msg.playerTurn, "playerTurn");
-                        assert.strictEqual(x, msg.x, "x");
-                        assert.strictEqual(y, msg.y, "y");
-
-                        isDone();
-                    });
-
-                    battleShip.processMessage(attackee.id, attackMessage);
+                        battleShip.processMessage(attackee.id, attackMessage);
+                    })();
                 });
             });
 
