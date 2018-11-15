@@ -14,7 +14,7 @@
 </head>
 
 <body>
-    <iframe src="mocha-iframe.html"></iframe>
+    <iframe id='iframe-echo' src="mocha-iframe.html"></iframe>
 
     <div id="mocha">
         Loading
@@ -31,7 +31,10 @@
             mocha.checkLeaks();
             mocha.run();
         }
-        setTimeout(initMocha, 10 * 1);
+
+        document.addEventListener("DOMContentLoaded", function (event) {
+            setTimeout(initMocha, 10 * 1);
+        });
     </script>
 </body>
 
