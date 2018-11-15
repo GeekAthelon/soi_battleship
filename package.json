@@ -13,8 +13,8 @@
     "test:browser": "npm run clean && npm run build && webpack --mode=development --config webpack-test-browser.config.js",
     "test:node2": "npm run clean && npm run build && webpack --mode=development --config webpack-test-node.config.js",
     "testbundle": "mocha dist/test-bundle-node.js",
-    "lint": "tslint --project .",
-    "lint:fix": "tslint --project . --fix",
+    "lint": "tslint --project . && tsfmt --verify",
+    "lint:fix": "tslint --project . --fix && tsfmt -r",
     "validate": "npm-run-all --parallel test:node lint",
     "precommit": "npm run validate",
     "prepush": "npm run validate"
@@ -42,6 +42,7 @@
     "ts-loader": "^5.3.0",
     "tslint": "^5.11.0",
     "typescript": "^3.1.6",
+    "typescript-formatter": "^7.2.2",
     "webpack": "^4.25.1",
     "webpack-cli": "^3.1.2",
     "webpack-node-externals": "^1.7.2",

@@ -6,7 +6,7 @@ interface IDictionary {
 
 const registry: IDictionary = {};
 
-export async function  save(id: string, data: IGameData) {
+export async function save(id: string, data: IGameData) {
     registry[id] = data;
 }
 
