@@ -5,9 +5,14 @@ var HtmlWebpackPlugin = require('html-webpack-plugin');
 const path = require('path');
 
 var config = {
-  entry: './all-tests.js',
+
+  entry: {
+    a: "./all-tests.js",
+    b: "./iframe-echo.js"
+  },
   output: {
-    filename: 'test-browser-bundle.js'
+    path: path.join(__dirname, "dist"),
+    filename: "[name].entry.js"
   },
   target: 'web', // node | web
   // externals: [nodeExternals()],
@@ -22,6 +27,16 @@ var config = {
       {
         template: path.resolve(__dirname, 'src', 'app', 'mocha.html'),
         filename: "mocha.html",
+        chunks: ['a', 'vendor'],
+        inject: true
+      },
+      new webpack.HotModuleReplacementPlugin()
+    ),
+    new HtmlWebpackPlugin(
+      {
+        template: path.resolve(__dirname, 'src', 'app', 'mocha-iframe.html'),
+        filename: "mocha-iframe.html",
+        chunks: ['b', 'vendor'],
         inject: true
       },
       new webpack.HotModuleReplacementPlugin()

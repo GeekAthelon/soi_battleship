@@ -4,15 +4,22 @@
     <meta charset="utf-8">
     <title>Mocha Tests</title>
     <link href="https://unpkg.com/mocha@5.2.0/mocha.css" rel="stylesheet" />
+
+    <style>
+        iframe {
+            width: calc(90vw);
+            height: calc(20vh);
+        }
+    </style>
 </head>
 
 <body>
+    <iframe src="mocha-iframe.html"></iframe>
 
     <div id="mocha">
         Loading
     </div>
 
-    <zscript src="https://unpkg.com/chai/chai.js"></zscript>
     <script src="https://unpkg.com/mocha@5.2.0/mocha.js"></script>
 
     <script>mocha.setup('bdd')</script>
