@@ -31,6 +31,22 @@ export const Pub = (id: string, name: string, ...args: any[]) => {
     });
 };
 
+export const SubOnce = (id: string, name: string) => {
+    return new Promise((resolve, reject) => {
+
+        let triggered = false;
+        const resolver = (a: any) => {
+            if (triggered) {
+                throw new Error("pub-sub.SubOnce triggered twice");
+            }
+            triggered = true;
+            resolve(a);
+            Unsub(id, name, resolver);
+        };
+        Sub(id, name, resolver);
+    });
+};
+
 export const Sub = (id: string, name: string, fn: ISubscription) => {
     const key = makeKeyName(id, name);
     if (enableLogging) { console.log("Subscribing to " + key); }

@@ -24,6 +24,23 @@ describe("typescript-pubsub", () => {
         setTimeout(foo, 10);
     });
 
+    it.only("triggers SubOnce resolves once.", (done) => {
+        const eventName = "trig1";
+
+        PubSub.SubOnce(ID, eventName).then((d: any) => {
+            // tslint:disable-next-line:no-console
+            console.log(d);
+            done();
+        });
+
+        const foo = () => {
+            PubSub.Pub(ID, eventName, "a");
+        };
+
+        setTimeout(foo, 10);
+        setTimeout(foo, 10);
+    });
+
     it("multiple triggers", (done) => {
         const eventName = "trig2";
 
