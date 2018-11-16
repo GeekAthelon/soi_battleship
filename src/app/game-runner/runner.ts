@@ -52,4 +52,7 @@ const setStatus = (s: string) => {
     ]);
 
     setStatus("iframes have responded");
+
+    postMessage.InitalizeIframe("Player 1", iframe1.contentWindow!);
+    postMessage.InitalizeIframe("Other Player", iframe2.contentWindow!);
 })();

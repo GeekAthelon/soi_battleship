@@ -1,3 +1,8 @@
+// POST messages are used  for inter-process communications
+// Either the hosting page and the game's iframe or between the testing
+// sytem's iframe.
+//
+
 export interface IMessageTypeBase {
     type: string;
 }
@@ -8,6 +13,11 @@ export interface IMessageTypePing extends IMessageTypeBase {
 
 export interface IMessageTypePong extends IMessageTypeBase {
     type: "PONG";
+}
+
+export interface IInitalizeIframe extends IMessageTypeBase {
+    type: "INTIALIZEIFRAME";
+    name: string;
 }
 
 export interface IMessageListenFirebaseChange extends IMessageTypeBase {
@@ -44,7 +54,17 @@ export const ListenForValue = (key: string, value: string, dest: Window) => {
     postMessage(dest, msg);
 };
 
-export type MessageType = IMessageTypePing |
+export const InitalizeIframe = (name: string, dest: Window) => {
+    const msg: IInitalizeIframe = {
+        name,
+        type: "INTIALIZEIFRAME",
+    };
+    postMessage(dest, msg);
+};
+
+export type MessageType =
+    IMessageTypePing |
     IMessageTypePong |
+    IInitalizeIframe |
     IMessageListenFirebaseChange
     ;
