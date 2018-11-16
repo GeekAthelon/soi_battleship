@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <title>Battle Ship Runner</title>
+
+    <style>
+        iframe {
+            border: black;
+            width: 46vw;
+            height: calc(100vh - 30px);
+            position: absolute;
+            bottom: 1vh;
+        }
+
+        #player1home iframe {
+            left: 1vw;
+            border: 1px solid green;
+        }
+
+        #player2home iframe {
+            right: 1vw;
+            border: 1px solid red;
+        }
+
+        .status-bar {
+            background-color: blue;
+            color: yellow;
+        }
+    </style>
+
+</head>
+
+<body>
+    <div class="status-bar"></div>
+    <h1>Battleship Runner</h1>
+    <div id="player1home"></div>
+    <div id="player2home"></div>
+</body>
+
+</html>

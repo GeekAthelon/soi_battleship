@@ -6,8 +6,8 @@ const path = require('path');
 
 var config = {
   entry: {
-    a: "./all-tests.js",
-    b: "./iframe-echo.js"
+    runner: "./src/app/game-runner/runner.js",
+    bsiframe: "./src/app/ts/main.js"
   },
   output: {
     path: path.join(__dirname, "dist"),
@@ -24,18 +24,18 @@ var config = {
     }),
     new HtmlWebpackPlugin(
       {
-        template: path.resolve(__dirname, 'src', 'app', 'mocha.html'),
+        template: path.resolve(__dirname, 'src', 'app', 'game-runner', 'bs-runner.html'),
         filename: "index.html",
-        chunks: ['a', 'vendor'],
+        chunks: ['runner', 'vendor'],
         inject: true
       },
       new webpack.HotModuleReplacementPlugin()
     ),
     new HtmlWebpackPlugin(
       {
-        template: path.resolve(__dirname, 'src', 'app', 'mocha-iframe.html'),
-        filename: "mocha-iframe.html",
-        chunks: ['b', 'vendor'],
+        template: path.resolve(__dirname, 'src', 'app', 'bs-iframe.html'),
+        filename: "bs-iframe.html",
+        chunks: ['bsiframe', 'vendor'],
         inject: true
       },
       new webpack.HotModuleReplacementPlugin()

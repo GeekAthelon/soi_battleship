@@ -6,8 +6,9 @@
   "scripts": {
     "build": "tsc --project .",
     "clean": "rimraf dist build src/**/*.{js,js.map}",
-    "webpack": "npm run clean && webpack --mode=development",
-    "webpackp": "npm run clean && webpack --mode=production",
+    "webpack": "npm run clean && npm run build && webpack --mode=development",
+    "webpackp": "npm run clean && npm run build && webpack --mode=production",
+    "2": "npm run webpack && http-server dist -o -c-1",
     "test": "npm run test:node --silent -s",
     "test:node": "npm run clean && npm run build && mocha src/tests/**/*.js",
     "test:browser": "npm run clean && npm run build && webpack --mode=development --config webpack-test-browser.config.js && http-server dist -o -c-1",
