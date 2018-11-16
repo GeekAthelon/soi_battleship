@@ -1,10 +1,10 @@
-import * as pubSubMessages from "../app/pub-sub-name";
+import * as dataStore from "../lib/data-store";
+import * as PubSub from "../lib/pub-sub";
+import { range } from "../lib/range";
+import * as pubSubMessages from "../ts/pub-sub-name";
 import { IGameData, IShipData, IStartGameData } from "./igamedata";
 import * as IMessage from "./imessages";
 import { IMsgAttackResponse } from "./imessages";
-import * as dataStore from "./lib/data-store";
-import * as PubSub from "./lib/pub-sub";
-import { range } from "./lib/range";
 
 export enum BoardCellType {
     // Numbers below 100 are for ships

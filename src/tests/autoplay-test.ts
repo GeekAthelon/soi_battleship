@@ -2,12 +2,12 @@
 // tslint:disable:no-console
 
 import * as chai from "chai";
-import * as battleShip from "../app/battleship";
-import { IGameData, IStartGameData } from "../app/igamedata";
-import { IMsgAttack, IMsgAttackResponse, IMsgUpdateUI } from "../app/imessages";
 import * as dataStore from "../app/lib/data-store";
 import * as PubSub from "../app/lib/pub-sub";
-import * as pubSubMessages from "../app/pub-sub-name";
+import * as battleShip from "../app/ts/battleship";
+import { IGameData, IStartGameData } from "../app/ts/igamedata";
+import { IMsgAttack, IMsgAttackResponse, IMsgUpdateUI } from "../app/ts/imessages";
+import * as pubSubMessages from "../app/ts/pub-sub-name";
 
 const assert = chai.assert;
 describe("Battleship Autoplay", function() {

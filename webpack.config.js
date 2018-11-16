@@ -1,43 +1,57 @@
-const path = require('path'),
-    webpack = require('webpack'),
-    HtmlWebpackPlugin = require('html-webpack-plugin');
+var webpack = require('webpack');
+var nodeExternals = require('webpack-node-externals');
+var WebpackShellPlugin = require('webpack-shell-plugin');
+var HtmlWebpackPlugin = require('html-webpack-plugin');
+const path = require('path');
 
-module.exports = {
-    //    entry: {
-    ///        app: ['./zsrc/app/App.tsx', 'webpack-hot-middleware/client'],
-    //        vendor: ['react', 'react-dom']
-    //    },
-    entry: './src/app/battleship.ts',
-    output: {
-        path: path.resolve(__dirname, 'dist'),
-        filename: 'js/[name].bundle.js'
-    },
-    devtool: 'source-map',
-    resolve: {
-        extensions: ['.js', '.jsx', '.json', '.ts', '.tsx']
-    },
-    module: {
-        rules: [
-            {
-                test: /\.(ts|tsx)$/,
-                loader: 'ts-loader'
-            },
-            { enforce: "pre", test: /\.js$/, loader: "source-map-loader" }
-        ]
-    },
-    plugins: [
-        new HtmlWebpackPlugin({ template: path.resolve(__dirname, 'src', 'app', 'index.html') }),
-        new webpack.HotModuleReplacementPlugin()
-    ],
-    optimization: {
-        splitChunks: {
-            cacheGroups: {
-                commons: {
-                    test: /[\\/]node_modules[\\/]/,
-                    name: "vendor",
-                    chunks: "initial",
-                },
-            },
+var config = {
+  entry: {
+    a: "./all-tests.js",
+    b: "./iframe-echo.js"
+  },
+  output: {
+    path: path.join(__dirname, "dist"),
+    filename: "[name].entry.js"
+  },
+  target: 'web', // node | web
+  // externals: [nodeExternals()],
+  node: {
+    fs: 'empty'
+  },
+  plugins: [
+    new WebpackShellPlugin({
+    //  onBuildExit: "start dist/mocha.html"
+    }),
+    new HtmlWebpackPlugin(
+      {
+        template: path.resolve(__dirname, 'src', 'app', 'mocha.html'),
+        filename: "index.html",
+        chunks: ['a', 'vendor'],
+        inject: true
+      },
+      new webpack.HotModuleReplacementPlugin()
+    ),
+    new HtmlWebpackPlugin(
+      {
+        template: path.resolve(__dirname, 'src', 'app', 'mocha-iframe.html'),
+        filename: "mocha-iframe.html",
+        chunks: ['b', 'vendor'],
+        inject: true
+      },
+      new webpack.HotModuleReplacementPlugin()
+    )
+  ],
+  optimization: {
+    splitChunks: {
+      cacheGroups: {
+        commons: {
+          test: /[\\/]node_modules[\\/]/,
+          name: "vendor",
+          chunks: "initial",
         },
+      },
     },
-}
+  },
+};
+
+module.exports = config;

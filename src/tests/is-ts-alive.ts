@@ -1,6 +1,6 @@
 import * as chai from "chai";
 const assert = chai.assert;
-import * as battleShip from "../app/battleship";
+import * as battleShip from "../app/ts/battleship";
 
 describe("is typescript alive", () => {
     it("should be alive", () => {

@@ -5,7 +5,6 @@ var HtmlWebpackPlugin = require('html-webpack-plugin');
 const path = require('path');
 
 var config = {
-
   entry: {
     a: "./all-tests.js",
     b: "./iframe-echo.js"

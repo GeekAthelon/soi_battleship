@@ -1,4 +1,4 @@
-import { IGameData } from "../igamedata";
+import { IGameData } from "../ts/igamedata";
 
 interface IDictionary {
     [name: string]: IGameData;
