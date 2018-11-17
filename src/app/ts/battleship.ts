@@ -1,6 +1,7 @@
 import * as dataStore from "../lib/data-store";
-import { PubSub } from "../lib/pub-sub";
+import { interplayer } from "../lib/interplayer-pub-sub";
 import { range } from "../lib/range";
+import { interui } from "../lib/ui-pub-sub";
 import * as pubSubMessages from "../ts/pub-sub-name";
 import { IGameData, IShipData, IStartGameData } from "./igamedata";
 import * as IMessage from "./imessages";
@@ -136,7 +137,7 @@ function sendUpateUI(gameData: IGameData, gameMessage: IMessage.GameMessage) {
         sourcePlayerId: gameMessage.sourcePlayerId,
         targetPlayerId: gameMessage.targetPlayerId,
     };
-    PubSub.Pub(gameData.id, pubSubMessages.UPDATE_UI, updateUiMessage);
+    interui.Pub(gameData.id, pubSubMessages.UPDATE_UI, updateUiMessage);
 }
 
 export async function processMessage(recipient: string, gameMessage: IMessage.GameMessage) {
@@ -155,7 +156,7 @@ export async function processMessage(recipient: string, gameMessage: IMessage.Ga
         case "attack":
             const responseMessage = await processAttack(gameData, gameMessage);
             if (responseMessage) {
-                PubSub.Pub(responseMessage.targetPlayerId, pubSubMessages.ATTACK_RESPONSE, responseMessage);
+                interplayer.Pub(responseMessage.targetPlayerId, pubSubMessages.ATTACK_RESPONSE, responseMessage);
             }
             break;
         case "attack-response":
@@ -182,7 +183,7 @@ export function initGame(startGameData: IStartGameData, playerID: string) {
         startGameData,
     };
 
-    PubSub.Sub(playerID, pubSubMessages.ATTACK_RESPONSE, (msg: IMsgAttackResponse) => {
+    interplayer.Sub(playerID, pubSubMessages.ATTACK_RESPONSE, (msg: IMsgAttackResponse) => {
         processMessage(playerID, msg);
     });
     return gameData;
