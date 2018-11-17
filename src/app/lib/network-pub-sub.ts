@@ -19,6 +19,39 @@ export function connect(source: string, target: string): INetworkPubSub {
     const receiverPrefix = `${target}:${source}:`;
 
     const makeKeyName = (id: string, name: string) => `${id}:${name}`;
+    const makeKeyName2 = (id: string, name: string) => `T:${id}:${name}`;
+
+    const makeReceiver = <T extends {}>(name: string) => {
+        return (fn: INetworkPubSubSubscriptionT<T>) => {
+            subT<T>(name, fn);
+        };
+    };
+
+    const makeSender = <T extends {}>(name: string) => {
+        return (arg: T) => {
+            pubT<T>(name, arg);
+        };
+    };
+
+    const pubT = <T extends {}>(name: string, arg: T) => {
+        const key = makeKeyName2(senderPrefix, name);
+        if (!registry[key]) { return; }
+        registry[key].forEach((x) => {
+            setTimeout(() => {
+                x.call(null, arg);
+            });
+        }, 1);
+    };
+
+    const subT = <T extends {}>(name: string, fn: INetworkPubSubSubscriptionT<T>) => {
+        const key = makeKeyName2(receiverPrefix, name);
+        if (enableLogging) { console.log("Subscribing to " + key); }
+        if (!registry[key]) {
+            registry[key] = [fn];
+        } else {
+            registry[key].push(fn);
+        }
+    };
 
     const pub = (name: string, arg: any) => {
         const key = makeKeyName(senderPrefix, name);
@@ -28,8 +61,7 @@ export function connect(source: string, target: string): INetworkPubSub {
             setTimeout(() => {
                 x.call(null, arg);
             });
-
-        }, 20);
+        }, 1);
     };
 
     const sub = (name: string, fn: INetworkPubSubSubscription) => {
@@ -59,8 +91,12 @@ export function connect(source: string, target: string): INetworkPubSub {
     };
 
     return {
+        makeReceiver,
+        makeSender,
         pub,
+        pubT,
         sub,
+        subT,
         unsub,
     };
 }

@@ -4,7 +4,7 @@ import * as networkPubSub from "../../app/lib/network-pub-sub";
 
 const assert = chai.assert;
 
-describe.only("network-pub-sub", function() {
+describe("network-pub-sub", function() {
     const stack1 = networkPubSub.connect("P1", "P2");
     const stack2 = networkPubSub.connect("P2", "P1");
 
@@ -22,6 +22,38 @@ describe.only("network-pub-sub", function() {
 
         const foo = () => {
             stack1.pub(eventName, "test1");
+        };
+
+        setTimeout(foo, 10);
+    });
+
+    it("triggers the generics", (done) => {
+        const eventName = networkPubSub.getUniqueTrigger();
+
+        stack2.subT<boolean>(eventName, (arg) => {
+            done();
+        });
+
+        const foo = () => {
+            stack1.pubT<boolean>(eventName, true);
+        };
+
+        setTimeout(foo, 10);
+    });
+
+    it("receiver and sender", (done) => {
+        const eventName = networkPubSub.getUniqueTrigger();
+
+        const booleanSender = stack2.makeReceiver<boolean>(eventName);
+        const booleanReceiver = stack1.makeSender(eventName);
+
+        booleanSender((value) => {
+            assert.equal(true, value);
+            done();
+        });
+
+        const foo = () => {
+            booleanReceiver(true);
         };
 
         setTimeout(foo, 10);
