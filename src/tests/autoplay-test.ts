@@ -7,7 +7,7 @@ import * as interplayer from "../app/lib/interplayer-pub-sub";
 import * as interui from "../app/lib/ui-pub-sub";
 import * as battleShip from "../app/ts/battleship";
 import { IGameData, IStartGameData } from "../app/ts/igamedata";
-import { IMsgAttack, IMsgAttackResponse, IMsgUpdateUI } from "../app/ts/imessages";
+import { IMsgAttack } from "../app/ts/imessages";
 
 const assert = chai.assert;
 
@@ -122,7 +122,7 @@ describe("Battleship Autoplay", function() {
                 }
             };
 
-            const attackResponseTests = (msg: IMsgAttackResponse) => {
+            const attackResponseTests = (msg: IGameMessageAttackResponse) => {
                 if (!action) {
                     throw new Error("ATTACK_RESPONSE - Action not OK");
                 }

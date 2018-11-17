@@ -8,7 +8,7 @@ import { colors } from "../app/lib/terminal-colors";
 import * as interui from "../app/lib/ui-pub-sub";
 import * as battleShip from "../app/ts/battleship";
 import { IGameData, IPlayer, IStartGameData } from "../app/ts/igamedata";
-import { IMsgAttack, IMsgAttackResponse, IMsgUpdateUI } from "../app/ts/imessages";
+import { IMsgAttack, IMsgUpdateUI } from "../app/ts/imessages";
 
 const assert = chai.assert;
 
@@ -279,14 +279,15 @@ describe("Main BattleShip Engine", function() {
                             y,
                         };
 
-                        interplayer.Sub(gameData1.id, interplayer.MSG.ATTACK_RESPONSE, (msg: IMsgAttackResponse) => {
-                            assert.strictEqual(false, msg.isSuccess);
-                            assert.strictEqual(gameData1.id, msg.playerTurn);
-                            assert.strictEqual(x, msg.x);
-                            assert.strictEqual(y, msg.y);
+                        interplayer.Sub(gameData1.id,
+                            interplayer.MSG.ATTACK_RESPONSE, (msg: IGameMessageAttackResponse) => {
+                                assert.strictEqual(false, msg.isSuccess);
+                                assert.strictEqual(gameData1.id, msg.playerTurn);
+                                assert.strictEqual(x, msg.x);
+                                assert.strictEqual(y, msg.y);
 
-                            resolve();
-                        });
+                                resolve();
+                            });
 
                         battleShip.processMessage(gameData2.id, attackMessage);
                     })();
@@ -338,17 +339,18 @@ describe("Main BattleShip Engine", function() {
                             isDone();
                         });
 
-                        interplayer.Sub(attacker.id, interplayer.MSG.ATTACK_RESPONSE, (msg: IMsgAttackResponse) => {
-                            assert.strictEqual(true, msg.isSuccess, "isSuccess");
-                            assert.strictEqual(false, msg.isHit, "isHit");
-                            assert.strictEqual(false, msg.isSink, "isSink");
-                            assert.strictEqual(undefined, msg.sunkShip, "sunkShip");
-                            assert.strictEqual(attackee.id, msg.playerTurn, "playerTurn");
-                            assert.strictEqual(x, msg.x, "x");
-                            assert.strictEqual(y, msg.y, "y");
+                        interplayer.Sub(attacker.id, interplayer.MSG.ATTACK_RESPONSE,
+                            (msg: IGameMessageAttackResponse) => {
+                                assert.strictEqual(true, msg.isSuccess, "isSuccess");
+                                assert.strictEqual(false, msg.isHit, "isHit");
+                                assert.strictEqual(false, msg.isSink, "isSink");
+                                assert.strictEqual(undefined, msg.sunkShip, "sunkShip");
+                                assert.strictEqual(attackee.id, msg.playerTurn, "playerTurn");
+                                assert.strictEqual(x, msg.x, "x");
+                                assert.strictEqual(y, msg.y, "y");
 
-                            isDone();
-                        });
+                                isDone();
+                            });
 
                         battleShip.processMessage(attackee.id, attackMessage);
                     })();
@@ -404,17 +406,18 @@ describe("Main BattleShip Engine", function() {
                             isDone();
                         });
 
-                        interplayer.Sub(attacker.id, interplayer.MSG.ATTACK_RESPONSE, (msg: IMsgAttackResponse) => {
-                            assert.strictEqual(true, msg.isSuccess, "isSuccess");
-                            assert.strictEqual(true, msg.isHit, "isHit");
-                            assert.strictEqual(false, msg.isSink, "isSink");
-                            assert.strictEqual(undefined, msg.sunkShip, "sunkShip");
-                            assert.strictEqual(attackee.id, msg.playerTurn, "playerTurn");
-                            assert.strictEqual(x, msg.x, "x");
-                            assert.strictEqual(y, msg.y, "y");
+                        interplayer.Sub(attacker.id, interplayer.MSG.ATTACK_RESPONSE,
+                            (msg: IGameMessageAttackResponse) => {
+                                assert.strictEqual(true, msg.isSuccess, "isSuccess");
+                                assert.strictEqual(true, msg.isHit, "isHit");
+                                assert.strictEqual(false, msg.isSink, "isSink");
+                                assert.strictEqual(undefined, msg.sunkShip, "sunkShip");
+                                assert.strictEqual(attackee.id, msg.playerTurn, "playerTurn");
+                                assert.strictEqual(x, msg.x, "x");
+                                assert.strictEqual(y, msg.y, "y");
 
-                            isDone();
-                        });
+                                isDone();
+                            });
 
                         battleShip.processMessage(attackee.id, attackMessage);
                     })();
@@ -470,17 +473,18 @@ describe("Main BattleShip Engine", function() {
                             isDone();
                         });
 
-                        interplayer.Sub(attacker.id, interplayer.MSG.ATTACK_RESPONSE, (msg: IMsgAttackResponse) => {
-                            assert.strictEqual(true, msg.isSuccess, "isSuccess");
-                            assert.strictEqual(true, msg.isHit, "isHit");
-                            assert.strictEqual(true, msg.isSink, "isSink");
-                            assert.strictEqual(5, msg.sunkShip, "sunkShip");
-                            assert.strictEqual(attackee.id, msg.playerTurn, "playerTurn");
-                            assert.strictEqual(x, msg.x, "x");
-                            assert.strictEqual(y, msg.y, "y");
+                        interplayer.Sub(attacker.id, interplayer.MSG.ATTACK_RESPONSE,
+                            (msg: IGameMessageAttackResponse) => {
+                                assert.strictEqual(true, msg.isSuccess, "isSuccess");
+                                assert.strictEqual(true, msg.isHit, "isHit");
+                                assert.strictEqual(true, msg.isSink, "isSink");
+                                assert.strictEqual(5, msg.sunkShip, "sunkShip");
+                                assert.strictEqual(attackee.id, msg.playerTurn, "playerTurn");
+                                assert.strictEqual(x, msg.x, "x");
+                                assert.strictEqual(y, msg.y, "y");
 
-                            isDone();
-                        });
+                                isDone();
+                            });
 
                         battleShip.processMessage(attackee.id, attackMessage);
                     })();

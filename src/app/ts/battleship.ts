@@ -1,10 +1,11 @@
 import * as dataStore from "../lib/data-store";
 import * as interplayer from "../lib/interplayer-pub-sub";
+import * as networkPubSub from "../lib/network-pub-sub";
 import { range } from "../lib/range";
 import * as interui from "../lib/ui-pub-sub";
+import { ZMessageTypes } from "./constants";
 import { IGameData, IShipData, IStartGameData } from "./igamedata";
 import * as IMessage from "./imessages";
-import { IMsgAttackResponse } from "./imessages";
 
 export enum BoardCellType {
     // Numbers below 100 are for ships
@@ -82,7 +83,7 @@ export function randomizeShips(gameData: IGameData) {
     });
 }
 
-async function processAttackResponse(gameData: IGameData, gameMessage: IMessage.IMsgAttackResponse) {
+async function processAttackResponse(gameData: IGameData, gameMessage: IGameMessageAttackResponse) {
     if (!gameMessage.isSuccess) {
         return;
     }
@@ -91,18 +92,34 @@ async function processAttackResponse(gameData: IGameData, gameMessage: IMessage.
     gameData.data.targetBoard[gameMessage.x][gameMessage.y] = cellValue;
 }
 
-async function processAttack(gameData: IGameData, gameMessage: IMessage.IMsgAttack) {
+async function runAttack(
+    gameMessage: IMessage.IMsgAttack,
+    sender: (arg: IGameMesageAttack) => void,
+) {
+    const gameData = await dataStore.load(gameMessage.targetPlayerId);
+
+    const responseMessage = await processAttack(gameData, gameMessage);
+
+    if (responseMessage) {
+        sender(responseMessage);
+    }
+    await dataStore.save(gameMessage.targetPlayerId, gameData);
+    sendUpateUI(gameData, gameMessage);
+}
+
+export async function processAttack(
+    gameData: IGameData,
+    gameMessage: IMessage.IMsgAttack,
+) {
+
     const cell = gameData.data.shipBoard[gameMessage.x] && gameData.data.shipBoard[gameMessage.x][gameMessage.y];
 
-    const responseMessage: IMsgAttackResponse = {
-        id: "attack-response",
+    const responseMessage: IGameMessageAttackResponse = {
         isHit: false,
         isSink: false,
         isSuccess: false,
         playerTurn: gameMessage.sourcePlayerId,
-        sourcePlayerId: gameMessage.targetPlayerId,
         sunkShip: undefined,
-        targetPlayerId: gameMessage.sourcePlayerId,
         x: gameMessage.x,
         y: gameMessage.y,
     };
@@ -125,7 +142,6 @@ async function processAttack(gameData: IGameData, gameMessage: IMessage.IMsgAtta
         // Either hit a targetted spot alreada
         // Or, hit outside the game area
     }
-
     return responseMessage;
 }
 
@@ -140,35 +156,7 @@ function sendUpateUI(gameData: IGameData, gameMessage: IMessage.GameMessage) {
 }
 
 export async function processMessage(recipient: string, gameMessage: IMessage.GameMessage) {
-    // When running the test suite, we get activity from both player1 and player2
-    // going through this routine.
     //
-    // in a real multiplayer game, we wouldn't need recipient to filter the chatter.
-
-    if (recipient !== gameMessage.targetPlayerId) {
-        return;
-    }
-
-    const gameData = await dataStore.load(gameMessage.targetPlayerId);
-
-    switch (gameMessage.id) {
-        case "attack":
-            const responseMessage = await processAttack(gameData, gameMessage);
-            if (responseMessage) {
-                interplayer.Pub(responseMessage.targetPlayerId, interplayer.MSG.ATTACK_RESPONSE, responseMessage);
-            }
-            break;
-        case "attack-response":
-            await processAttackResponse(gameData, gameMessage);
-            break;
-        case "update-ui":
-            break;
-        default:
-            throw new Error(gameMessage);
-    }
-
-    await dataStore.save(gameMessage.targetPlayerId, gameData);
-    sendUpateUI(gameData, gameMessage);
 }
 
 export function initGame(startGameData: IStartGameData, playerID: string) {
@@ -182,8 +170,14 @@ export function initGame(startGameData: IStartGameData, playerID: string) {
         startGameData,
     };
 
-    interplayer.Sub(playerID, interplayer.MSG.ATTACK_RESPONSE, (msg: IMsgAttackResponse) => {
-        processMessage(playerID, msg);
+    const networkChannel = networkPubSub.connect(startGameData.playerList[0].id, startGameData.playerList[1].id);
+    const attackResponseReceiver = networkChannel.makeReceiver<IGameMessageAttackResponse>
+        (ZMessageTypes.attackResponse);
+    //    const attackSender = networkChannel.makeSender<IGameMessageAttackResponse>(ZMessageTypes.attackResponse);
+
+    attackResponseReceiver((value) => {
+        processAttackResponse(gameData, value);
     });
+
     return gameData;
 }
