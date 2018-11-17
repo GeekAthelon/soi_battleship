@@ -2,14 +2,13 @@
 
 import * as chai from "chai";
 import * as dataStore from "../app/lib/data-store";
-import { interplayer } from "../app/lib/interplayer-pub-sub";
+import * as interplayer from "../app/lib/interplayer-pub-sub";
 import { range } from "../app/lib/range";
 import { colors } from "../app/lib/terminal-colors";
-import { interui } from "../app/lib/ui-pub-sub";
+import * as interui from "../app/lib/ui-pub-sub";
 import * as battleShip from "../app/ts/battleship";
 import { IGameData, IPlayer, IStartGameData } from "../app/ts/igamedata";
 import { IMsgAttack, IMsgAttackResponse, IMsgUpdateUI } from "../app/ts/imessages";
-import * as pubSubMessages from "../app/ts/pub-sub-name";
 
 const assert = chai.assert;
 
@@ -280,7 +279,7 @@ describe("Main BattleShip Engine", function() {
                             y,
                         };
 
-                        interplayer.Sub(gameData1.id, pubSubMessages.ATTACK_RESPONSE, (msg: IMsgAttackResponse) => {
+                        interplayer.Sub(gameData1.id, interplayer.MSG.ATTACK_RESPONSE, (msg: IMsgAttackResponse) => {
                             assert.strictEqual(false, msg.isSuccess);
                             assert.strictEqual(gameData1.id, msg.playerTurn);
                             assert.strictEqual(x, msg.x);
@@ -323,7 +322,7 @@ describe("Main BattleShip Engine", function() {
                             }
                         };
 
-                        interui.Sub(attackee.id, pubSubMessages.UPDATE_UI, (msg: IMsgUpdateUI) => {
+                        interui.Sub(attackee.id, interui.MSG.UPDATE_UI, (msg: IMsgUpdateUI) => {
                             const loadedData2 = msg.gameData;
                             const cell2 = loadedData2.data.shipBoard[x][y];
 
@@ -331,7 +330,7 @@ describe("Main BattleShip Engine", function() {
                             isDone();
                         });
 
-                        interui.Sub(attacker.id, pubSubMessages.UPDATE_UI, (msg: IMsgUpdateUI) => {
+                        interui.Sub(attacker.id, interui.MSG.UPDATE_UI, (msg: IMsgUpdateUI) => {
                             const loadedData1 = msg.gameData;
                             const cell1 = loadedData1.data.targetBoard[x][y];
 
@@ -339,7 +338,7 @@ describe("Main BattleShip Engine", function() {
                             isDone();
                         });
 
-                        interplayer.Sub(attacker.id, pubSubMessages.ATTACK_RESPONSE, (msg: IMsgAttackResponse) => {
+                        interplayer.Sub(attacker.id, interplayer.MSG.ATTACK_RESPONSE, (msg: IMsgAttackResponse) => {
                             assert.strictEqual(true, msg.isSuccess, "isSuccess");
                             assert.strictEqual(false, msg.isHit, "isHit");
                             assert.strictEqual(false, msg.isSink, "isSink");
@@ -384,7 +383,7 @@ describe("Main BattleShip Engine", function() {
                             }
                         };
 
-                        interui.Sub(attackee.id, pubSubMessages.UPDATE_UI, (msg: IMsgUpdateUI) => {
+                        interui.Sub(attackee.id, interui.MSG.UPDATE_UI, (msg: IMsgUpdateUI) => {
                             const loadedData2 = msg.gameData;
                             const cell2 = loadedData2.data.shipBoard[x][y];
 
@@ -397,7 +396,7 @@ describe("Main BattleShip Engine", function() {
                             isDone();
                         });
 
-                        interui.Sub(attacker.id, pubSubMessages.UPDATE_UI, (msg: IMsgUpdateUI) => {
+                        interui.Sub(attacker.id, interui.MSG.UPDATE_UI, (msg: IMsgUpdateUI) => {
                             const loadedData1 = msg.gameData;
                             const cell1 = loadedData1.data.targetBoard[x][y];
 
@@ -405,7 +404,7 @@ describe("Main BattleShip Engine", function() {
                             isDone();
                         });
 
-                        interplayer.Sub(attacker.id, pubSubMessages.ATTACK_RESPONSE, (msg: IMsgAttackResponse) => {
+                        interplayer.Sub(attacker.id, interplayer.MSG.ATTACK_RESPONSE, (msg: IMsgAttackResponse) => {
                             assert.strictEqual(true, msg.isSuccess, "isSuccess");
                             assert.strictEqual(true, msg.isHit, "isHit");
                             assert.strictEqual(false, msg.isSink, "isSink");
@@ -450,7 +449,7 @@ describe("Main BattleShip Engine", function() {
                             }
                         };
 
-                        interui.Sub(attackee.id, pubSubMessages.UPDATE_UI, (msg: IMsgUpdateUI) => {
+                        interui.Sub(attackee.id, interui.MSG.UPDATE_UI, (msg: IMsgUpdateUI) => {
                             const loadedData2 = msg.gameData;
                             const cell2 = loadedData2.data.shipBoard[x][y];
 
@@ -463,7 +462,7 @@ describe("Main BattleShip Engine", function() {
                             isDone();
                         });
 
-                        interui.Sub(attacker.id, pubSubMessages.UPDATE_UI, (msg: IMsgUpdateUI) => {
+                        interui.Sub(attacker.id, interui.MSG.UPDATE_UI, (msg: IMsgUpdateUI) => {
                             const loadedData1 = msg.gameData;
                             const cell1 = loadedData1.data.targetBoard[x][y];
 
@@ -471,7 +470,7 @@ describe("Main BattleShip Engine", function() {
                             isDone();
                         });
 
-                        interplayer.Sub(attacker.id, pubSubMessages.ATTACK_RESPONSE, (msg: IMsgAttackResponse) => {
+                        interplayer.Sub(attacker.id, interplayer.MSG.ATTACK_RESPONSE, (msg: IMsgAttackResponse) => {
                             assert.strictEqual(true, msg.isSuccess, "isSuccess");
                             assert.strictEqual(true, msg.isHit, "isHit");
                             assert.strictEqual(true, msg.isSink, "isSink");

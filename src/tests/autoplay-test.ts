@@ -3,12 +3,11 @@
 
 import * as chai from "chai";
 import * as dataStore from "../app/lib/data-store";
-import { interplayer } from "../app/lib/interplayer-pub-sub";
-import { interui } from "../app/lib/ui-pub-sub";
+import * as interplayer from "../app/lib/interplayer-pub-sub";
+import * as interui from "../app/lib/ui-pub-sub";
 import * as battleShip from "../app/ts/battleship";
 import { IGameData, IStartGameData } from "../app/ts/igamedata";
 import { IMsgAttack, IMsgAttackResponse, IMsgUpdateUI } from "../app/ts/imessages";
-import * as pubSubMessages from "../app/ts/pub-sub-name";
 
 const assert = chai.assert;
 
@@ -112,7 +111,7 @@ describe("Battleship Autoplay", function() {
             }
 
             const updateUiTests = () => {
-                interui.Unsub(attacker.id, pubSubMessages.UPDATE_UI, updateUiTests);
+                interui.Unsub(attacker.id, interui.MSG.UPDATE_UI, updateUiTests);
 
                 if (action.isSuccess) {
                     // Swap players
@@ -128,7 +127,7 @@ describe("Battleship Autoplay", function() {
                     throw new Error("ATTACK_RESPONSE - Action not OK");
                 }
 
-                interplayer.Unsub(attacker.id, pubSubMessages.ATTACK_RESPONSE, attackResponseTests);
+                interplayer.Unsub(attacker.id, interplayer.MSG.ATTACK_RESPONSE, attackResponseTests);
 
                 // console.log(battleShipTest.boardToNodeString(attackee.data.shipBoard, attackee));
                 assert.strictEqual(action.isSuccess, msg.isSuccess, "isSuccess");
@@ -139,8 +138,8 @@ describe("Battleship Autoplay", function() {
                 assert.strictEqual(action.y, msg.y, "y");
             };
 
-            interui.Sub(attacker.id, pubSubMessages.UPDATE_UI, updateUiTests);
-            interplayer.Sub(attacker.id, pubSubMessages.ATTACK_RESPONSE, attackResponseTests);
+            interui.Sub(attacker.id, interui.MSG.UPDATE_UI, updateUiTests);
+            interplayer.Sub(attacker.id, interplayer.MSG.ATTACK_RESPONSE, attackResponseTests);
 
             if (!action) {
                 throw new Error("NO ACTION");
