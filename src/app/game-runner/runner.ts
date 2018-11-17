@@ -1,6 +1,6 @@
 import { initFirebase } from "../lib/firebase-pub";
 import * as postMessage from "../lib/post-message";
-import * as PubSub from "../lib/pub-sub";
+// import { PubSub } from "../lib/pub-sub";
 
 const setStatus = (s: string) => {
     const statusDiv = document.querySelector(".status-bar") as HTMLDivElement;

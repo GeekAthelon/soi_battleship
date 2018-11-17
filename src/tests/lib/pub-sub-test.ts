@@ -1,4 +1,4 @@
-import * as PubSub from "../../app/lib/pub-sub";
+import { PubSub } from "../../app/lib/pub-sub";
 
 import * as chai from "chai";
 const assert = chai.assert;
@@ -21,23 +21,6 @@ describe("typescript-pubsub", () => {
             PubSub.Pub(ID, eventName, "a", "b");
         };
 
-        setTimeout(foo, 10);
-    });
-
-    it.only("triggers SubOnce resolves once.", (done) => {
-        const eventName = "trig1";
-
-        PubSub.SubOnce(ID, eventName).then((d: any) => {
-            // tslint:disable-next-line:no-console
-            console.log(d);
-            done();
-        });
-
-        const foo = () => {
-            PubSub.Pub(ID, eventName, "a");
-        };
-
-        setTimeout(foo, 10);
         setTimeout(foo, 10);
     });
 

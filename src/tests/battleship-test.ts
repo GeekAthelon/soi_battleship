@@ -2,7 +2,7 @@
 
 import * as chai from "chai";
 import * as dataStore from "../app/lib/data-store";
-import * as PubSub from "../app/lib/pub-sub";
+import { PubSub } from "../app/lib/pub-sub";
 import { range } from "../app/lib/range";
 import { colors } from "../app/lib/terminal-colors";
 import * as battleShip from "../app/ts/battleship";

@@ -3,7 +3,7 @@
 
 import * as chai from "chai";
 import * as dataStore from "../app/lib/data-store";
-import * as PubSub from "../app/lib/pub-sub";
+import { PubSub } from "../app/lib/pub-sub";
 import * as battleShip from "../app/ts/battleship";
 import { IGameData, IStartGameData } from "../app/ts/igamedata";
 import { IMsgAttack, IMsgAttackResponse, IMsgUpdateUI } from "../app/ts/imessages";

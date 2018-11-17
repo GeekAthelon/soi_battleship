@@ -1,5 +1,5 @@
 import * as dataStore from "../lib/data-store";
-import * as PubSub from "../lib/pub-sub";
+import { PubSub } from "../lib/pub-sub";
 import { range } from "../lib/range";
 import * as pubSubMessages from "../ts/pub-sub-name";
 import { IGameData, IShipData, IStartGameData } from "./igamedata";
