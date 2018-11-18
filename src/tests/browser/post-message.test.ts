@@ -1,6 +1,7 @@
 // tslint:disable:only-arrow-functions
 
 import * as chai from "chai";
+import { firebaseNickJoiner } from "../../app/lib/firebase-nick-joiner";
 import { initFirebase } from "../../app/lib/firebase-pub";
 import * as postMessage from "../../app/lib/post-message";
 import { amInBrowser } from "./am-in-browser";
@@ -70,7 +71,7 @@ describe(`browser postMessage examples: Running ${amInBrowser()}`, function() {
                         const db = await initFirebase();
 
                         const testKeyReferenceObject = db.ref().child(testKey);
-                        const onlineReferenceObject = db.ref().child("online/unit-test");
+                        const onlineReferenceObject = db.ref().child(`online/unit-test${firebaseNickJoiner}0`);
 
                         const testValue = "" + new Date().getTime();
 

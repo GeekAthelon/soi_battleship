@@ -17,6 +17,7 @@ export interface IMessageTypePong extends IMessageTypeBase {
 
 export interface IInitalizeIframe extends IMessageTypeBase {
     type: "INTIALIZEIFRAME";
+    id: string;
     name: string;
 }
 
@@ -54,8 +55,9 @@ export const ListenForValue = (key: string, value: string, dest: Window) => {
     postMessage(dest, msg);
 };
 
-export const InitalizeIframe = (name: string, dest: Window) => {
+export const InitalizeIframe = (id: string, name: string, dest: Window) => {
     const msg: IInitalizeIframe = {
+        id,
         name,
         type: "INTIALIZEIFRAME",
     };

@@ -53,6 +53,6 @@ const setStatus = (s: string) => {
 
     setStatus("iframes have responded");
 
-    postMessage.InitalizeIframe("Player 1", iframe1.contentWindow!);
-    postMessage.InitalizeIframe("Other Player", iframe2.contentWindow!);
+    postMessage.InitalizeIframe("p1", "Player 1", iframe1.contentWindow!);
+    postMessage.InitalizeIframe("p2", "Player 2", iframe2.contentWindow!);
 })();
