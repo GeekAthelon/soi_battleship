@@ -1,5 +1,4 @@
 import * as dataStore from "../lib/data-store";
-import * as networkPubSub from "../lib/network-pub-sub";
 import { range } from "../lib/range";
 import * as interui from "../lib/ui-pub-sub";
 import { ZMessageTypes } from "./constants";
@@ -141,7 +140,7 @@ function sendUpateUI(gameData: IGameData, gameMessage: IGameMessageAttack, playe
     interui.Pub(gameData.id, interui.MSG.UPDATE_UI, updateUiMessage);
 }
 
-export function initGame(startGameData: IStartGameData, playerID: string) {
+export function initGame(startGameData: IStartGameData, networkChannel: INetworkChannel, playerID: string) {
     const gameData: IGameData = {
         data: {
             shipBoard: generateBoard(startGameData),
@@ -153,9 +152,7 @@ export function initGame(startGameData: IStartGameData, playerID: string) {
     };
 
     const player = gameData.startGameData.playerList.filter((p) => p.id === playerID)[0];
-
     const opponent = gameData.startGameData.playerList.filter((p) => p.id !== playerID)[0];
-    const networkChannel = networkPubSub.connect(playerID, opponent.id);
 
     const attackReceiver = networkChannel.makeReceiver<IGameMessageAttack>
         (ZMessageTypes.attack);

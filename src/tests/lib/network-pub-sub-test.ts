@@ -1,6 +1,6 @@
 // tslint:disable:only-arrow-functions
 import * as chai from "chai";
-import * as networkPubSub from "../../app/lib/network-pub-sub";
+import * as networkPubSub from "../../app/lib/same-process-pub-sub";
 
 const assert = chai.assert;
 

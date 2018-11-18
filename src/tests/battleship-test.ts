@@ -2,8 +2,8 @@
 
 import * as chai from "chai";
 import * as dataStore from "../app/lib/data-store";
-import * as networkPubSub from "../app/lib/network-pub-sub";
 import { range } from "../app/lib/range";
+import * as sameProcessPubSub from "../app/lib/same-process-pub-sub";
 import { colors } from "../app/lib/terminal-colors";
 import * as interui from "../app/lib/ui-pub-sub";
 import * as battleShip from "../app/ts/battleship";
@@ -113,7 +113,10 @@ describe("Main BattleShip Engine", function() {
 
         it("player1 data is created", function() {
             const startGameData = getStartGameData();
-            const gameData = battleShip.initGame(startGameData, startGameData.playerList[0].id);
+            const networkChannel = sameProcessPubSub.connect
+                (startGameData.playerList[0].id, startGameData.playerList[1].id);
+
+            const gameData = battleShip.initGame(startGameData, networkChannel, startGameData.playerList[0].id);
 
             assert.equal(startGameData.playerList[0].id, gameData.id);
             testPlayerData(gameData.data, gameData);
@@ -125,10 +128,12 @@ describe("Main BattleShip Engine", function() {
             it("horizontal - exactly enough room for the ship", function() {
                 const shipNumber = 0;
                 const startGameData = getStartGameData();
+                const networkChannel = sameProcessPubSub.connect
+                    (startGameData.playerList[0].id, startGameData.playerList[1].id);
 
                 startGameData.boardHeight = 1;
                 startGameData.boardWidth = startGameData.shipData[shipNumber].size;
-                const gameData = battleShip.initGame(startGameData, startGameData.playerList[0].id);
+                const gameData = battleShip.initGame(startGameData, networkChannel, startGameData.playerList[0].id);
 
                 const isValid = battleShip.tryPlaceShip(
                     gameData.startGameData.shipData, shipNumber, 0, 0, "h", gameData.data.shipBoard);
@@ -141,10 +146,12 @@ describe("Main BattleShip Engine", function() {
             it("vert - exactly enough room for the ship", function() {
                 const shipNumber = 0;
                 const startGameData = getStartGameData();
+                const networkChannel = sameProcessPubSub.connect
+                    (startGameData.playerList[0].id, startGameData.playerList[1].id);
 
                 startGameData.boardHeight = startGameData.shipData[shipNumber].size;
                 startGameData.boardWidth = 1;
-                const gameData = battleShip.initGame(startGameData, startGameData.playerList[0].id);
+                const gameData = battleShip.initGame(startGameData, networkChannel, startGameData.playerList[0].id);
 
                 const isValid = battleShip.tryPlaceShip(
                     gameData.startGameData.shipData, shipNumber, 0, 0, "v", gameData.data.shipBoard);
@@ -184,7 +191,9 @@ describe("Main BattleShip Engine", function() {
                 ];
 
                 tests.forEach((t) => {
-                    const gameData = battleShip.initGame(startGameData, startGameData.playerList[0].id);
+                    const networkChannel = sameProcessPubSub.connect
+                        (startGameData.playerList[0].id, startGameData.playerList[1].id);
+                    const gameData = battleShip.initGame(startGameData, networkChannel, startGameData.playerList[0].id);
 
                     const { x, y, p, result } = t;
                     const isValid = battleShip.tryPlaceShip(
@@ -205,8 +214,10 @@ describe("Main BattleShip Engine", function() {
             it("should place all ships", function() {
                 for (const i of range(1, 20)) {
                     const startGameData = getStartGameData();
+                    const networkChannel = sameProcessPubSub.connect
+                        (startGameData.playerList[0].id, startGameData.playerList[1].id);
 
-                    const gameData = battleShip.initGame(startGameData, startGameData.playerList[0].id);
+                    const gameData = battleShip.initGame(startGameData, networkChannel, startGameData.playerList[0].id);
                     battleShip.randomizeShips(gameData);
                     testBoardValid(gameData.data.shipBoard, gameData);
 
@@ -242,14 +253,16 @@ describe("Main BattleShip Engine", function() {
                 return new Promise<IGameData[]>((resolve, reject) => {
                     const startGameData = getStartGameData();
 
-                    const stack1 = networkPubSub.connect
+                    const networkChannel1 = sameProcessPubSub.connect
                         (startGameData.playerList[0].id, startGameData.playerList[1].id);
 
-                    const stack2 = networkPubSub.connect
+                    const networkChannel2 = sameProcessPubSub.connect
                         (startGameData.playerList[1].id, startGameData.playerList[0].id);
 
-                    const gameData1 = battleShip.initGame(startGameData, startGameData.playerList[0].id);
-                    const gameData2 = battleShip.initGame(startGameData, startGameData.playerList[1].id);
+                    const gameData1 = battleShip.initGame(startGameData, networkChannel1,
+                        startGameData.playerList[0].id);
+                    const gameData2 = battleShip.initGame(startGameData, networkChannel2,
+                        startGameData.playerList[1].id);
 
                     manuallyPlaceShips(gameData1);
                     manuallyPlaceShips(gameData2);
@@ -267,12 +280,12 @@ describe("Main BattleShip Engine", function() {
             };
 
             this.afterEach(() => {
-                networkPubSub.DEBUGremoveAll();
+                sameProcessPubSub.DEBUGremoveAll();
                 interui.UnsubAll();
             });
 
             this.beforeEach(() => {
-                networkPubSub.DEBUGremoveAll();
+                sameProcessPubSub.DEBUGremoveAll();
                 interui.UnsubAll();
             });
 
@@ -288,10 +301,10 @@ describe("Main BattleShip Engine", function() {
             this.beforeEach(() => {
                 const startGameData = getStartGameData();
 
-                const stack1 = networkPubSub.connect
+                const stack1 = sameProcessPubSub.connect
                     (startGameData.playerList[0].id, startGameData.playerList[1].id);
 
-                const stack2 = networkPubSub.connect
+                const stack2 = sameProcessPubSub.connect
                     (startGameData.playerList[1].id, startGameData.playerList[0].id);
 
                 player1AttackResponse = stack1.makeReceiver<IGameMessageAttackResponse>(ZMessageTypes.attackResponse);
