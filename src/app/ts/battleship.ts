@@ -1,10 +1,9 @@
 import * as dataStore from "../lib/data-store";
-import * as interplayer from "../lib/interplayer-pub-sub";
 import * as networkPubSub from "../lib/network-pub-sub";
 import { range } from "../lib/range";
 import * as interui from "../lib/ui-pub-sub";
 import { ZMessageTypes } from "./constants";
-import { IGameData, IShipData, IStartGameData } from "./igamedata";
+import { IGameData, IPlayerInfo, IShipData, IStartGameData } from "./igamedata";
 import * as IMessage from "./imessages";
 
 export enum BoardCellType {
@@ -92,24 +91,11 @@ async function processAttackResponse(gameData: IGameData, gameMessage: IGameMess
     gameData.data.targetBoard[gameMessage.x][gameMessage.y] = cellValue;
 }
 
-async function runAttack(
-    gameMessage: IMessage.IMsgAttack,
-    sender: (arg: IGameMesageAttack) => void,
-) {
-    const gameData = await dataStore.load(gameMessage.targetPlayerId);
-
-    const responseMessage = await processAttack(gameData, gameMessage);
-
-    if (responseMessage) {
-        sender(responseMessage);
-    }
-    await dataStore.save(gameMessage.targetPlayerId, gameData);
-    sendUpateUI(gameData, gameMessage);
-}
-
 export async function processAttack(
     gameData: IGameData,
-    gameMessage: IMessage.IMsgAttack,
+    gameMessage: IGameMessageAttack,
+    player: IPlayerInfo,
+    opponent: IPlayerInfo,
 ) {
 
     const cell = gameData.data.shipBoard[gameMessage.x] && gameData.data.shipBoard[gameMessage.x][gameMessage.y];
@@ -118,7 +104,7 @@ export async function processAttack(
         isHit: false,
         isSink: false,
         isSuccess: false,
-        playerTurn: gameMessage.sourcePlayerId,
+        playerTurn: opponent.id,
         sunkShip: undefined,
         x: gameMessage.x,
         y: gameMessage.y,
@@ -127,7 +113,7 @@ export async function processAttack(
     if (cell < gameData.startGameData.shipData.length) {
         responseMessage.isSuccess = true;
         responseMessage.isHit = true;
-        responseMessage.playerTurn = gameMessage.targetPlayerId;
+        responseMessage.playerTurn = player.id;
         gameData.data.shipHitPoints[cell]--;
         responseMessage.isSink = gameData.data.shipHitPoints[cell] === 0;
         responseMessage.sunkShip = responseMessage.isSink ? cell : undefined;
@@ -135,7 +121,7 @@ export async function processAttack(
         gameData.data.shipBoard[gameMessage.x][gameMessage.y] = BoardCellType.hit;
     } else if (cell === BoardCellType.water) {
         responseMessage.isSuccess = true;
-        responseMessage.playerTurn = gameMessage.targetPlayerId;
+        responseMessage.playerTurn = player.id;
 
         gameData.data.shipBoard[gameMessage.x][gameMessage.y] = BoardCellType.miss;
     } else {
@@ -145,18 +131,14 @@ export async function processAttack(
     return responseMessage;
 }
 
-function sendUpateUI(gameData: IGameData, gameMessage: IMessage.GameMessage) {
+function sendUpateUI(gameData: IGameData, gameMessage: IGameMessageAttack, player: IPlayerInfo, opponent: IPlayerInfo) {
     const updateUiMessage: IMessage.IMsgUpdateUI = {
         gameData,
         id: "update-ui",
-        sourcePlayerId: gameMessage.sourcePlayerId,
-        targetPlayerId: gameMessage.targetPlayerId,
+        sourcePlayerId: player.id,
+        targetPlayerId: opponent.id,
     };
     interui.Pub(gameData.id, interui.MSG.UPDATE_UI, updateUiMessage);
-}
-
-export async function processMessage(recipient: string, gameMessage: IMessage.GameMessage) {
-    //
 }
 
 export function initGame(startGameData: IStartGameData, playerID: string) {
@@ -170,13 +152,35 @@ export function initGame(startGameData: IStartGameData, playerID: string) {
         startGameData,
     };
 
-    const networkChannel = networkPubSub.connect(startGameData.playerList[0].id, startGameData.playerList[1].id);
+    const player = gameData.startGameData.playerList.filter((p) => p.id === playerID)[0];
+
+    const opponent = gameData.startGameData.playerList.filter((p) => p.id !== playerID)[0];
+    const networkChannel = networkPubSub.connect(playerID, opponent.id);
+
+    const attackReceiver = networkChannel.makeReceiver<IGameMessageAttack>
+        (ZMessageTypes.attack);
+
     const attackResponseReceiver = networkChannel.makeReceiver<IGameMessageAttackResponse>
         (ZMessageTypes.attackResponse);
-    //    const attackSender = networkChannel.makeSender<IGameMessageAttackResponse>(ZMessageTypes.attackResponse);
 
-    attackResponseReceiver((value) => {
-        processAttackResponse(gameData, value);
+    attackResponseReceiver(async (gameMessage) => {
+        const currentGameData = await dataStore.load(playerID);
+        processAttackResponse(currentGameData, gameMessage);
+
+        sendUpateUI(currentGameData, gameMessage, player, opponent);
+        await dataStore.save(playerID, currentGameData);
+    });
+
+    attackReceiver(async (gameMessage) => {
+        const attackReplySender = networkChannel.makeSender<IGameMessageAttackResponse>(ZMessageTypes.attackResponse);
+
+        const currentGameData = await dataStore.load(playerID);
+        const responseMessage = await processAttack(currentGameData, gameMessage, player, opponent);
+
+        attackReplySender(responseMessage);
+
+        await dataStore.save(playerID, currentGameData);
+        sendUpateUI(currentGameData, gameMessage, player, opponent);
     });
 
     return gameData;

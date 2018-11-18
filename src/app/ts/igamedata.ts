@@ -4,14 +4,14 @@ export interface IShipData {
     size: number;
 }
 
-export interface IPlayerList {
+export interface IPlayerInfo {
     name: string;
     id: string;
 }
 export interface IStartGameData {
     boardHeight: number;
     boardWidth: number;
-    playerList: IPlayerList[];
+    playerList: IPlayerInfo[];
     shipData: IShipData[];
 }
 

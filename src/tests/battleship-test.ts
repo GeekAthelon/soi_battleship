@@ -2,13 +2,14 @@
 
 import * as chai from "chai";
 import * as dataStore from "../app/lib/data-store";
-import * as interplayer from "../app/lib/interplayer-pub-sub";
+import * as networkPubSub from "../app/lib/network-pub-sub";
 import { range } from "../app/lib/range";
 import { colors } from "../app/lib/terminal-colors";
 import * as interui from "../app/lib/ui-pub-sub";
 import * as battleShip from "../app/ts/battleship";
+import { ZMessageTypes } from "../app/ts/constants";
 import { IGameData, IPlayer, IStartGameData } from "../app/ts/igamedata";
-import { IMsgAttack, IMsgUpdateUI } from "../app/ts/imessages";
+import { IMsgUpdateUI } from "../app/ts/imessages";
 
 const assert = chai.assert;
 
@@ -226,7 +227,7 @@ describe("Main BattleShip Engine", function() {
             });
         });
 
-        describe("IMsgAttack", function() {
+        describe("Attacking", function() {
             const manuallyPlaceShips = (gameData: IGameData) => {
                 for (let i = 0; i < gameData.startGameData.shipData.length; i++) {
                     const isValid = battleShip.tryPlaceShip(
@@ -240,6 +241,13 @@ describe("Main BattleShip Engine", function() {
             const initGameTest = () => {
                 return new Promise<IGameData[]>((resolve, reject) => {
                     const startGameData = getStartGameData();
+
+                    const stack1 = networkPubSub.connect
+                        (startGameData.playerList[0].id, startGameData.playerList[1].id);
+
+                    const stack2 = networkPubSub.connect
+                        (startGameData.playerList[1].id, startGameData.playerList[0].id);
+
                     const gameData1 = battleShip.initGame(startGameData, startGameData.playerList[0].id);
                     const gameData2 = battleShip.initGame(startGameData, startGameData.playerList[1].id);
 
@@ -258,9 +266,30 @@ describe("Main BattleShip Engine", function() {
                 });
             };
 
-            this.beforeEach(() => {
+            this.afterEach(() => {
+                networkPubSub.DEBUGremoveAll();
                 interui.UnsubAll();
-                interplayer.UnsubAll();
+            });
+
+            this.beforeEach(() => {
+                networkPubSub.DEBUGremoveAll();
+                interui.UnsubAll();
+            });
+
+            let player1AttackResponse: (fn: INetworkPubSubSubscriptionT<IGameMessageAttackResponse>) => void;
+            let player1Attack: (arg: IGameMessageAttack) => void;
+
+            this.beforeEach(() => {
+                const startGameData = getStartGameData();
+
+                const stack1 = networkPubSub.connect
+                    (startGameData.playerList[0].id, startGameData.playerList[1].id);
+
+                const stack2 = networkPubSub.connect
+                    (startGameData.playerList[1].id, startGameData.playerList[0].id);
+
+                player1AttackResponse = stack1.makeReceiver<IGameMessageAttackResponse>(ZMessageTypes.attackResponse);
+                player1Attack = stack1.makeSender<IGameMessageAttack>(ZMessageTypes.attack);
             });
 
             it("Attacking outside the board unsuccessful", function() {
@@ -271,28 +300,18 @@ describe("Main BattleShip Engine", function() {
                         const x = -1;
                         const y = -2;
 
-                        const attackMessage: IMsgAttack = {
-                            id: "attack",
-                            sourcePlayerId: gameData1.startGameData.playerList[0].id,
-                            targetPlayerId: gameData2.startGameData.playerList[1].id,
-                            x,
-                            y,
-                        };
+                        player1AttackResponse((msg) => {
+                            assert.strictEqual(false, msg.isSuccess);
+                            assert.strictEqual(gameData1.id, msg.playerTurn);
+                            assert.strictEqual(x, msg.x);
+                            assert.strictEqual(y, msg.y);
 
-                        interplayer.Sub(gameData1.id,
-                            interplayer.MSG.ATTACK_RESPONSE, (msg: IGameMessageAttackResponse) => {
-                                assert.strictEqual(false, msg.isSuccess);
-                                assert.strictEqual(gameData1.id, msg.playerTurn);
-                                assert.strictEqual(x, msg.x);
-                                assert.strictEqual(y, msg.y);
+                            resolve();
+                        });
 
-                                resolve();
-                            });
-
-                        battleShip.processMessage(gameData2.id, attackMessage);
+                        player1Attack({ x, y });
                     })();
                 });
-
             });
 
             it("Attacking water is returns correct response and sets target board", function() {
@@ -302,14 +321,6 @@ describe("Main BattleShip Engine", function() {
 
                         const x = attackee.startGameData.boardWidth - 1;
                         const y = attackee.startGameData.boardHeight - 1;
-
-                        const attackMessage: IMsgAttack = {
-                            id: "attack",
-                            sourcePlayerId: attacker.startGameData.playerList[0].id,
-                            targetPlayerId: attackee.startGameData.playerList[1].id,
-                            x,
-                            y,
-                        };
 
                         let neededEventCount = 3;
 
@@ -339,20 +350,19 @@ describe("Main BattleShip Engine", function() {
                             isDone();
                         });
 
-                        interplayer.Sub(attacker.id, interplayer.MSG.ATTACK_RESPONSE,
-                            (msg: IGameMessageAttackResponse) => {
-                                assert.strictEqual(true, msg.isSuccess, "isSuccess");
-                                assert.strictEqual(false, msg.isHit, "isHit");
-                                assert.strictEqual(false, msg.isSink, "isSink");
-                                assert.strictEqual(undefined, msg.sunkShip, "sunkShip");
-                                assert.strictEqual(attackee.id, msg.playerTurn, "playerTurn");
-                                assert.strictEqual(x, msg.x, "x");
-                                assert.strictEqual(y, msg.y, "y");
+                        player1AttackResponse((msg) => {
+                            assert.strictEqual(true, msg.isSuccess, "isSuccess");
+                            assert.strictEqual(false, msg.isHit, "isHit");
+                            assert.strictEqual(false, msg.isSink, "isSink");
+                            assert.strictEqual(undefined, msg.sunkShip, "sunkShip");
+                            assert.strictEqual(attackee.id, msg.playerTurn, "playerTurn");
+                            assert.strictEqual(x, msg.x, "x");
+                            assert.strictEqual(y, msg.y, "y");
 
-                                isDone();
-                            });
+                            isDone();
+                        });
 
-                        battleShip.processMessage(attackee.id, attackMessage);
+                        player1Attack({ x, y });
                     })();
                 });
             });
@@ -364,14 +374,6 @@ describe("Main BattleShip Engine", function() {
 
                         const x = 0;
                         const y = 0;
-
-                        const attackMessage: IMsgAttack = {
-                            id: "attack",
-                            sourcePlayerId: attacker.startGameData.playerList[0].id,
-                            targetPlayerId: attackee.startGameData.playerList[1].id,
-                            x,
-                            y,
-                        };
 
                         let neededEventCount = 3;
 
@@ -406,20 +408,19 @@ describe("Main BattleShip Engine", function() {
                             isDone();
                         });
 
-                        interplayer.Sub(attacker.id, interplayer.MSG.ATTACK_RESPONSE,
-                            (msg: IGameMessageAttackResponse) => {
-                                assert.strictEqual(true, msg.isSuccess, "isSuccess");
-                                assert.strictEqual(true, msg.isHit, "isHit");
-                                assert.strictEqual(false, msg.isSink, "isSink");
-                                assert.strictEqual(undefined, msg.sunkShip, "sunkShip");
-                                assert.strictEqual(attackee.id, msg.playerTurn, "playerTurn");
-                                assert.strictEqual(x, msg.x, "x");
-                                assert.strictEqual(y, msg.y, "y");
+                        player1AttackResponse((msg) => {
+                            assert.strictEqual(true, msg.isSuccess, "isSuccess");
+                            assert.strictEqual(true, msg.isHit, "isHit");
+                            assert.strictEqual(false, msg.isSink, "isSink");
+                            assert.strictEqual(undefined, msg.sunkShip, "sunkShip");
+                            assert.strictEqual(attackee.id, msg.playerTurn, "playerTurn");
+                            assert.strictEqual(x, msg.x, "x");
+                            assert.strictEqual(y, msg.y, "y");
 
-                                isDone();
-                            });
+                            isDone();
+                        });
 
-                        battleShip.processMessage(attackee.id, attackMessage);
+                        player1Attack({ x, y });
                     })();
                 });
             });
@@ -431,14 +432,6 @@ describe("Main BattleShip Engine", function() {
 
                         const x = 10;
                         const y = 0;
-
-                        const attackMessage: IMsgAttack = {
-                            id: "attack",
-                            sourcePlayerId: attacker.startGameData.playerList[0].id,
-                            targetPlayerId: attackee.startGameData.playerList[1].id,
-                            x,
-                            y,
-                        };
 
                         let neededEventCount = 3;
 
@@ -473,20 +466,19 @@ describe("Main BattleShip Engine", function() {
                             isDone();
                         });
 
-                        interplayer.Sub(attacker.id, interplayer.MSG.ATTACK_RESPONSE,
-                            (msg: IGameMessageAttackResponse) => {
-                                assert.strictEqual(true, msg.isSuccess, "isSuccess");
-                                assert.strictEqual(true, msg.isHit, "isHit");
-                                assert.strictEqual(true, msg.isSink, "isSink");
-                                assert.strictEqual(5, msg.sunkShip, "sunkShip");
-                                assert.strictEqual(attackee.id, msg.playerTurn, "playerTurn");
-                                assert.strictEqual(x, msg.x, "x");
-                                assert.strictEqual(y, msg.y, "y");
+                        player1AttackResponse((msg) => {
+                            assert.strictEqual(true, msg.isSuccess, "isSuccess");
+                            assert.strictEqual(true, msg.isHit, "isHit");
+                            assert.strictEqual(true, msg.isSink, "isSink");
+                            assert.strictEqual(5, msg.sunkShip, "sunkShip");
+                            assert.strictEqual(attackee.id, msg.playerTurn, "playerTurn");
+                            assert.strictEqual(x, msg.x, "x");
+                            assert.strictEqual(y, msg.y, "y");
 
-                                isDone();
-                            });
+                            isDone();
+                        });
 
-                        battleShip.processMessage(attackee.id, attackMessage);
+                        player1Attack({ x, y });
                     })();
                 });
             });

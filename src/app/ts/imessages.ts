@@ -11,10 +11,4 @@ export interface IMsgUpdateUI extends IMsgBase {
     gameData: IGameData;
 }
 
-export interface IMsgAttack extends IMsgBase {
-    id: "attack";
-    x: number;
-    y: number;
-}
-
-export type GameMessage = IMsgAttack | IMsgUpdateUI;
+export type GameMessage = IMsgUpdateUI;

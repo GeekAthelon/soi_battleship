@@ -13,6 +13,10 @@ export function getUniqueTrigger() {
     return `Trigger:${uniqueTriggerValue}`;
 }
 
+export const DEBUGremoveAll = () => {
+    Object.keys(registry).forEach((key) => delete registry[key]);
+};
+
 export function connect(source: string, target: string): INetworkPubSub {
     const enableLogging = false;
     const senderPrefix = `${source}:${target}:`;

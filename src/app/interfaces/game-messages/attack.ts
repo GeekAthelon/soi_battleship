@@ -1,4 +1,4 @@
-interface IGameMesageAttack {
+interface IGameMessageAttack {
     x: number;
     y: number;
 }
