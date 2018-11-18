@@ -279,6 +279,12 @@ describe("Main BattleShip Engine", function() {
             let player1AttackResponse: (fn: INetworkPubSubSubscriptionT<IGameMessageAttackResponse>) => void;
             let player1Attack: (arg: IGameMessageAttack) => void;
 
+            const subUiUpdate = (id: string, callback: (msg: IMsgUpdateUI) => void) => {
+                interui.Sub(id, interui.MSG.UPDATE_UI, (msg: IMsgUpdateUI) => {
+                    callback(msg);
+                });
+            };
+
             this.beforeEach(() => {
                 const startGameData = getStartGameData();
 
@@ -334,7 +340,7 @@ describe("Main BattleShip Engine", function() {
                             }
                         };
 
-                        interui.Sub(attackee.id, interui.MSG.UPDATE_UI, (msg: IMsgUpdateUI) => {
+                        subUiUpdate(attackee.id, (msg: IMsgUpdateUI) => {
                             const loadedData2 = msg.gameData;
                             const cell2 = loadedData2.data.shipBoard[x][y];
 
@@ -342,7 +348,7 @@ describe("Main BattleShip Engine", function() {
                             isDone();
                         });
 
-                        interui.Sub(attacker.id, interui.MSG.UPDATE_UI, (msg: IMsgUpdateUI) => {
+                        subUiUpdate(attacker.id, (msg: IMsgUpdateUI) => {
                             const loadedData1 = msg.gameData;
                             const cell1 = loadedData1.data.targetBoard[x][y];
 
@@ -387,7 +393,7 @@ describe("Main BattleShip Engine", function() {
                             }
                         };
 
-                        interui.Sub(attackee.id, interui.MSG.UPDATE_UI, (msg: IMsgUpdateUI) => {
+                        subUiUpdate(attackee.id, (msg: IMsgUpdateUI) => {
                             const loadedData2 = msg.gameData;
                             const cell2 = loadedData2.data.shipBoard[x][y];
 
@@ -400,7 +406,7 @@ describe("Main BattleShip Engine", function() {
                             isDone();
                         });
 
-                        interui.Sub(attacker.id, interui.MSG.UPDATE_UI, (msg: IMsgUpdateUI) => {
+                        subUiUpdate(attacker.id, (msg: IMsgUpdateUI) => {
                             const loadedData1 = msg.gameData;
                             const cell1 = loadedData1.data.targetBoard[x][y];
 
@@ -445,7 +451,7 @@ describe("Main BattleShip Engine", function() {
                             }
                         };
 
-                        interui.Sub(attackee.id, interui.MSG.UPDATE_UI, (msg: IMsgUpdateUI) => {
+                        subUiUpdate(attackee.id, (msg: IMsgUpdateUI) => {
                             const loadedData2 = msg.gameData;
                             const cell2 = loadedData2.data.shipBoard[x][y];
 
@@ -458,7 +464,7 @@ describe("Main BattleShip Engine", function() {
                             isDone();
                         });
 
-                        interui.Sub(attacker.id, interui.MSG.UPDATE_UI, (msg: IMsgUpdateUI) => {
+                        subUiUpdate(attacker.id, (msg: IMsgUpdateUI) => {
                             const loadedData1 = msg.gameData;
                             const cell1 = loadedData1.data.targetBoard[x][y];
 
