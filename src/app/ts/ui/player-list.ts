@@ -1,6 +1,7 @@
 export interface IPlayerInfo {
     id: string;
     name: string;
+    callback?: (opponent: IPlayerInfo) => void;
 }
 
 const comparePlayerInfo = (a: IPlayerInfo, b: IPlayerInfo) => {
@@ -34,15 +35,25 @@ const refreshPlayerList = () => {
     }
 
     cleanList.forEach((player) => {
+        const button = document.createElement("button");
         const li = document.createElement("li");
+        const innerList = playerList.filter((p) => p.name === player.name);
+
         li.dataset.playerName = player.name;
         li.dataset.PlayerId = player.id;
-        li.textContent = `${player.name} [${player.id}]`;
+        li.textContent = `${player.name} [${player.id}] x${innerList.length}`;
+
+        button.type = "button";
+        button.textContent = "challenge";
+        button.addEventListener("click", () => player.callback!(player));
+
+        li.appendChild(button);
         ul.appendChild(li);
     });
 };
 
-export function addPlayer(playerInfo: IPlayerInfo) {
+export function addPlayer(playerInfo: IPlayerInfo, callback: (opponent: IPlayerInfo) => void) {
+    playerInfo.callback = callback;
     playerList.push(playerInfo);
     refreshPlayerList();
 }

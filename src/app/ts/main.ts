@@ -31,7 +31,10 @@ const messageHander = (e: MessageEvent) => {
 
 const loginPlayer = async (loginMessage: postMessage.IInitalizeIframe) => {
     const db = await initFirebase();
-    const gameRef = "battleship";
+
+    const challengeOpponent = (opponent: IPlayerInfo) => {
+        alert(opponent);
+    };
 
     // There is weird race condition where when you refresh the page, the user can end up
     // knocked off the list, so make the name unique to combat that problem.
@@ -50,7 +53,9 @@ const loginPlayer = async (loginMessage: postMessage.IInitalizeIframe) => {
         if (snap && snap.key) {
             const json = snap.key.split(firebaseNickJoiner)[0];
             const playerInfo = JSON.parse(json) as IPlayerInfo;
-            addPlayer(playerInfo);
+            if (playerInfo.id !== loginMessage.id) {
+                addPlayer(playerInfo, challengeOpponent);
+            }
         }
     });
 
@@ -58,7 +63,9 @@ const loginPlayer = async (loginMessage: postMessage.IInitalizeIframe) => {
         if (snap && snap.key) {
             const json = snap.key.split(firebaseNickJoiner)[0];
             const playerInfo = JSON.parse(json) as IPlayerInfo;
-            removePlayer(playerInfo);
+            if (playerInfo.id !== loginMessage.id) {
+                removePlayer(playerInfo);
+            }
         }
     });
 };
