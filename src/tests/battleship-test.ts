@@ -11,6 +11,8 @@ import { ZMessageTypes } from "../app/ts/constants";
 import { IGameData, IPlayer, IStartGameData } from "../app/ts/igamedata";
 import { IMsgUpdateUI } from "../app/ts/imessages";
 
+const networkPubSub = sameProcessPubSub.init();
+
 const assert = chai.assert;
 
 export const boardToNodeString = (board: number[][], gameData: IGameData) => {
@@ -113,7 +115,7 @@ describe("Main BattleShip Engine", function() {
 
         it("player1 data is created", function() {
             const startGameData = getStartGameData();
-            const networkChannel = sameProcessPubSub.connect
+            const networkChannel = networkPubSub.connect
                 (startGameData.playerList[0].id, startGameData.playerList[1].id);
 
             const gameData = battleShip.initGame(startGameData, networkChannel, startGameData.playerList[0].id);
@@ -128,7 +130,7 @@ describe("Main BattleShip Engine", function() {
             it("horizontal - exactly enough room for the ship", function() {
                 const shipNumber = 0;
                 const startGameData = getStartGameData();
-                const networkChannel = sameProcessPubSub.connect
+                const networkChannel = networkPubSub.connect
                     (startGameData.playerList[0].id, startGameData.playerList[1].id);
 
                 startGameData.boardHeight = 1;
@@ -146,7 +148,7 @@ describe("Main BattleShip Engine", function() {
             it("vert - exactly enough room for the ship", function() {
                 const shipNumber = 0;
                 const startGameData = getStartGameData();
-                const networkChannel = sameProcessPubSub.connect
+                const networkChannel = networkPubSub.connect
                     (startGameData.playerList[0].id, startGameData.playerList[1].id);
 
                 startGameData.boardHeight = startGameData.shipData[shipNumber].size;
@@ -191,7 +193,7 @@ describe("Main BattleShip Engine", function() {
                 ];
 
                 tests.forEach((t) => {
-                    const networkChannel = sameProcessPubSub.connect
+                    const networkChannel = networkPubSub.connect
                         (startGameData.playerList[0].id, startGameData.playerList[1].id);
                     const gameData = battleShip.initGame(startGameData, networkChannel, startGameData.playerList[0].id);
 
@@ -214,7 +216,7 @@ describe("Main BattleShip Engine", function() {
             it("should place all ships", function() {
                 for (const i of range(1, 20)) {
                     const startGameData = getStartGameData();
-                    const networkChannel = sameProcessPubSub.connect
+                    const networkChannel = networkPubSub.connect
                         (startGameData.playerList[0].id, startGameData.playerList[1].id);
 
                     const gameData = battleShip.initGame(startGameData, networkChannel, startGameData.playerList[0].id);
@@ -253,10 +255,10 @@ describe("Main BattleShip Engine", function() {
                 return new Promise<IGameData[]>((resolve, reject) => {
                     const startGameData = getStartGameData();
 
-                    const networkChannel1 = sameProcessPubSub.connect
+                    const networkChannel1 = networkPubSub.connect
                         (startGameData.playerList[0].id, startGameData.playerList[1].id);
 
-                    const networkChannel2 = sameProcessPubSub.connect
+                    const networkChannel2 = networkPubSub.connect
                         (startGameData.playerList[1].id, startGameData.playerList[0].id);
 
                     const gameData1 = battleShip.initGame(startGameData, networkChannel1,
@@ -280,12 +282,12 @@ describe("Main BattleShip Engine", function() {
             };
 
             this.afterEach(() => {
-                sameProcessPubSub.DEBUGremoveAll();
+                networkPubSub.DEBUGremoveAll();
                 interui.UnsubAll();
             });
 
             this.beforeEach(() => {
-                sameProcessPubSub.DEBUGremoveAll();
+                networkPubSub.DEBUGremoveAll();
                 interui.UnsubAll();
             });
 
@@ -301,10 +303,10 @@ describe("Main BattleShip Engine", function() {
             this.beforeEach(() => {
                 const startGameData = getStartGameData();
 
-                const channel1 = sameProcessPubSub.connect
+                const channel1 = networkPubSub.connect
                     (startGameData.playerList[0].id, startGameData.playerList[1].id);
 
-                const channel2 = sameProcessPubSub.connect
+                const stack2 = networkPubSub.connect
                     (startGameData.playerList[1].id, startGameData.playerList[0].id);
 
                 player1AttackResponse = channel1.makeReceiver<IGameMessageAttackResponse>(ZMessageTypes.attackResponse);

@@ -15,3 +15,9 @@ interface INetworkChannel {
     makeReceiver: NetworkPubSubReceiver;
     makeSender: NetWorkPubSubSender;
 }
+
+interface INetworkPubSub {
+    getUniqueTrigger: () => string;
+    DEBUGremoveAll: () => void;
+    connect: (source: string, target: string) => INetworkChannel;
+}
