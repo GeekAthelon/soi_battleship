@@ -3,10 +3,8 @@ import { initFirebase } from "../lib/firebase-pub";
 import * as postMessage from "../lib/post-message";
 import { addPlayer, IPlayerInfo, removePlayer } from "./ui/player-list";
 
-// tslint:disable-next-line:no-var-requires
-require("../style/ui.scss");
+import "../style/ui.css";
 
-// import * as uicss from "../style/ui.css";
 const tryParse = (s: string) => {
     try {
         return JSON.parse(s);

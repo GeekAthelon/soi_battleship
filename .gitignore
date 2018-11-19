@@ -3,5 +3,5 @@ dist/
 build/
 src/**/*.js
 src/**/*.map
-
-
+src/app/style/*.css
+src/app/style/*.css.d.ts
