@@ -3,6 +3,8 @@ import { initFirebase } from "../lib/firebase-pub";
 import * as postMessage from "../lib/post-message";
 import { addPlayer, IPlayerInfo, removePlayer } from "./ui/player-list";
 
+import swal from "sweetalert";
+
 import "../style/ui.css";
 
 const tryParse = (s: string) => {
@@ -32,6 +34,41 @@ const messageHander = (e: MessageEvent) => {
 };
 
 const loginPlayer = async (loginMessage: postMessage.IInitalizeIframe) => {
+
+    const res = await swal("Do you care?");
+
+    const willDelete = await swal({
+        buttons: {
+            cancel: {
+                className: "",
+                closeModal: true,
+                text: "Cancel",
+                value: null,
+                visible: true,
+            },
+            confirm: {
+                className: "",
+                closeModal: true,
+                text: "OK",
+                value: true,
+                visible: true,
+            },
+        },
+        dangerMode: true,
+        icon: "warning",
+        text: "Once deleted, you will not be able to recover this imaginary file!",
+        title: "Are you sure?",
+    });
+
+    alert("willDelete" + willDelete);
+    if (willDelete) {
+        await swal("Poof! Your imaginary file has been deleted!", {
+            icon: "success",
+        });
+    } else {
+        await swal("Your imaginary file is safe!");
+    }
+
     const db = await initFirebase();
 
     const challengeOpponent = (opponent: IPlayerInfo) => {
