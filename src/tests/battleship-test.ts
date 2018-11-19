@@ -301,14 +301,14 @@ describe("Main BattleShip Engine", function() {
             this.beforeEach(() => {
                 const startGameData = getStartGameData();
 
-                const stack1 = sameProcessPubSub.connect
+                const channel1 = sameProcessPubSub.connect
                     (startGameData.playerList[0].id, startGameData.playerList[1].id);
 
-                const stack2 = sameProcessPubSub.connect
+                const channel2 = sameProcessPubSub.connect
                     (startGameData.playerList[1].id, startGameData.playerList[0].id);
 
-                player1AttackResponse = stack1.makeReceiver<IGameMessageAttackResponse>(ZMessageTypes.attackResponse);
-                player1Attack = stack1.makeSender<IGameMessageAttack>(ZMessageTypes.attack);
+                player1AttackResponse = channel1.makeReceiver<IGameMessageAttackResponse>(ZMessageTypes.attackResponse);
+                player1Attack = channel1.makeSender<IGameMessageAttack>(ZMessageTypes.attack);
             });
 
             it("Attacking outside the board unsuccessful", function() {
