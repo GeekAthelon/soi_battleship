@@ -1,4 +1,5 @@
 // tslint:disable:no-console
+import firebase from "firebase/app";
 
 interface IDictionary {
     [name: string]: INetworkPubSubSubscription[];
@@ -9,13 +10,27 @@ interface IFirebasePush {
     target: string;
     name: string;
     arg: string;
+    timestamp: number;
 }
 
 export function init(db: firebase.database.Database): INetworkPubSub {
     const registry: IDictionary = {};
     let uniqueTriggerValue = 0;
     const ref = db.ref("mesages");
+    let serverTimeOffset: number;
 
+    const getOffset = () => {
+        if (serverTimeOffset !== undefined) {
+            return Promise.resolve(serverTimeOffset);
+        }
+        return new Promise<number>((resolve) => {
+            const offsetRef = firebase.database().ref(".info/serverTimeOffset");
+            offsetRef.on("value", (snap) => {
+                serverTimeOffset = snap!.val();
+                resolve(serverTimeOffset);
+            });
+        });
+    };
     function getUniqueTrigger() {
         uniqueTriggerValue++;
         return `Trigger:${uniqueTriggerValue}`;
@@ -76,22 +91,28 @@ export function init(db: firebase.database.Database): INetworkPubSub {
             }, 1);
         };
 
-        const pub = <T>(name: string, arg: any) => {
+        const pub = async <T>(name: string, arg: any) => {
+            const offset = await getOffset();
+
             const item: IFirebasePush = {
                 arg,
                 name,
                 source,
                 target,
+                timestamp: new Date().getTime() + offset,
             };
+
             ref.push(item);
         };
 
-        const pubT = (name: string, arg: any) => {
+        const pubT = async (name: string, arg: any) => {
+            const offset = await getOffset();
             const item: IFirebasePush = {
                 arg,
                 name,
                 source,
                 target,
+                timestamp: new Date().getTime() + offset,
             };
             ref.push(item);
         };
@@ -122,14 +143,16 @@ export function init(db: firebase.database.Database): INetworkPubSub {
             }
         };
 
-        ref.on("child_added", (snap) => {
-            if (snap && snap.key) {
-                const val = snap.val() as IFirebasePush;
-                if (val.target === target) {
-                    republish(val.name, val.arg);
-                    republishT(val.name, val.arg);
+        getOffset().then((offset) => {
+            ref.orderByChild("timestamp").startAt(Date.now() + offset).on("child_added", (snap) => {
+                if (snap && snap.key) {
+                    const val = snap.val() as IFirebasePush;
+                    if (val.target === target) {
+                        republish(val.name, val.arg);
+                        republishT(val.name, val.arg);
+                    }
                 }
-            }
+            });
         });
 
         return {
