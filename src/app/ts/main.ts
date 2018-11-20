@@ -4,6 +4,8 @@ import { initFirebase } from "../lib/firebase-pub";
 import * as firebasePubSub from "../lib/firebase-pub-sub";
 import * as postMessage from "../lib/post-message";
 import { ZMessageTypes } from "../ts/constants";
+import * as battleShip from "./battleship";
+import { handleChallenge } from "./ui/handle-challenge";
 import { addPlayer, IPlayerInfo, removePlayer } from "./ui/player-list";
 
 import "../style/ui.css";
@@ -36,51 +38,18 @@ const messageHander = (e: MessageEvent) => {
 
 const loginPlayer = async (loginMessage: postMessage.IInitalizeIframe) => {
 
-    // const res = await swal("Do you care?");
-
-    // const willDelete = await swal({
-    //     buttons: {
-    //         cancel: {
-    //             className: "",
-    //             closeModal: true,
-    //             text: "Cancel",
-    //             value: null,
-    //             visible: true,
-    //         },
-    //         confirm: {
-    //             className: "",
-    //             closeModal: true,
-    //             text: "OK",
-    //             value: true,
-    //             visible: true,
-    //         },
-    //     },
-    //     dangerMode: true,
-    //     icon: "warning",
-    //     text: "Once deleted, you will not be able to recover this imaginary file!",
-    //     title: "Are you sure?",
-    // });
-
-    // alert("willDelete" + willDelete);
-    // if (willDelete) {
-    //     await swal("Poof! Your imaginary file has been deleted!", {
-    //         icon: "success",
-    //     });
-    // } else {
-    //     await swal("Your imaginary file is safe!");
-    // }
-
     const db = await initFirebase();
     const pubSub = firebasePubSub.init(db);
 
     const globalChannel = pubSub.connect(loginMessage.id, "*");
 
     const challengeReceiver = globalChannel.makeReceiver<IGameMessageChallenge>(ZMessageTypes.challenge);
-    challengeReceiver((gameMessage) => {
+    challengeReceiver(async (gameMessage) => {
         if (gameMessage.target !== loginMessage.id) {
             return;
         }
-        swal(`You have been challeneged by ${gameMessage.source}`);
+        const isAccepted = await handleChallenge(gameMessage);
+        alert(isAccepted);
     });
 
     // const pingReceiver = globalChannel.makeReceiver<IGameMessagePing>(ZMessageTypes.ping);
@@ -95,10 +64,28 @@ const loginPlayer = async (loginMessage: postMessage.IInitalizeIframe) => {
     const challengeOpponent = (opponent: IPlayerInfo) => {
         swal(`Challenging ${opponent.name}`);
 
+        const startGameData: IStartGameData = {
+            boardHeight: 10,
+            boardWidth: 10,
+            playerList: [
+                { name: loginMessage.name, id: loginMessage.id },
+                { name: opponent.name, id: opponent.id },
+            ],
+            shipData: [
+                { name: "Carrier", size: 5 },
+                { name: "Battleship", size: 4 },
+                { name: "Cruiser", size: 3 },
+                { name: "Submarine", size: 3 },
+                { name: "Destroyer", size: 2 },
+                { name: "One Hit Wonder", size: 1 },
+            ],
+        };
+
         const sender = globalChannel.makeSender<IGameMessageChallenge>(ZMessageTypes.challenge);
         sender({
-            name: "ME!",
+            name: loginMessage.name,
             source: loginMessage.id,
+            startGameData,
             target: opponent.id,
         });
     };
