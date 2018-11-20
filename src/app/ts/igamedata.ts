@@ -1,3 +1,6 @@
+
+type shipDirection = "h" | "v";
+
 interface IShipData {
     name: string;
     size: number;
@@ -14,9 +17,16 @@ interface IStartGameData {
     shipData: IShipData[];
 }
 
+interface IShipStatus {
+    hitPoints: number;
+    shipDirection: shipDirection;
+    x: number;
+    y: number;
+}
+
 interface IPlayer {
     shipBoard: number[][];
-    shipHitPoints: number[];
+    shipStatus: IShipStatus[];
     targetBoard: number[][];
 }
 

@@ -60,7 +60,7 @@ describe("Main BattleShip Engine", function() {
     interface ITestLoop {
         x: number;
         y: number;
-        direction: battleShip.shipDirections;
+        direction: shipDirection;
         result: boolean;
     }
 
@@ -106,8 +106,8 @@ describe("Main BattleShip Engine", function() {
 
     describe("testing battleship start game", function() {
         const testPlayerData = (player: IPlayer, gameData: IGameData) => {
-            assert.ok(player.shipHitPoints.length);
-            player.shipHitPoints.forEach((sp) => assert.ok(sp, "Ship hit points"));
+            assert.ok(player.shipStatus.length);
+            player.shipStatus.forEach((sp) => assert.ok(sp.hitPoints, "Ship hit points"));
             testBoardValid(player.shipBoard, gameData);
             testBoardValid(player.targetBoard, gameData);
         };
@@ -416,7 +416,9 @@ describe("Main BattleShip Engine", function() {
                             // console.log(boardToNodeString(loadedData2.data.shipBoard, loadedData2));
 
                             assert.strictEqual(battleShip.BoardCellType.hit, cell2, "cell2");
-                            assert.notStrictEqual(startGameData.shipData[0].size, loadedData2.data.shipHitPoints[0]);
+                            assert.notStrictEqual(
+                                startGameData.shipData[0].size,
+                                loadedData2.data.shipStatus[0].hitPoints);
                             isDone();
                         });
 
@@ -474,7 +476,7 @@ describe("Main BattleShip Engine", function() {
                             // console.log(boardToNodeString(loadedData2.data.shipBoard, loadedData2));
 
                             assert.strictEqual(battleShip.BoardCellType.hit, cell2, "cell2");
-                            assert.strictEqual(0, loadedData2.data.shipHitPoints[5], "ship hit points");
+                            assert.strictEqual(0, loadedData2.data.shipStatus[5].hitPoints, "ship hit points");
                             isDone();
                         });
 

@@ -12,8 +12,6 @@ export enum BoardCellType {
     miss = 103,
 }
 
-export type shipDirections = "h" | "v";
-
 const generateBoard = (startGameData: IStartGameData) => {
     const board: number[][] = [];
     for (const x of range(0, startGameData.boardWidth - 1)) {
@@ -31,7 +29,7 @@ export function tryPlaceShip(
     shipNumber: number,
     x: number,
     y: number,
-    direection: shipDirections,
+    direection: shipDirection,
     board: number[][]): boolean {
 
     const xRange = direection === "h" ? range(x, x + shipData[shipNumber].size - 1) : range(x, x);
@@ -75,7 +73,7 @@ export function randomizeShips(gameData: IGameData) {
 
             const x = getRandomInt(0, gameData.startGameData.boardWidth);
             const y = getRandomInt(0, gameData.startGameData.boardHeight);
-            const p: shipDirections = getRandomInt(0, 1) === 0 ? "h" : "v";
+            const p: shipDirection = getRandomInt(0, 1) === 0 ? "h" : "v";
 
             isValid = tryPlaceShip(gameData.startGameData.shipData, idx, x, y, p, gameData.data.shipBoard);
         }
@@ -114,8 +112,8 @@ export async function processAttack(
         responseMessage.isSuccess = true;
         responseMessage.isHit = true;
         responseMessage.playerTurn = player.id;
-        gameData.data.shipHitPoints[cell]--;
-        responseMessage.isSink = gameData.data.shipHitPoints[cell] === 0;
+        gameData.data.shipStatus[cell].hitPoints--;
+        responseMessage.isSink = gameData.data.shipStatus[cell].hitPoints === 0;
         responseMessage.sunkShip = responseMessage.isSink ? cell : undefined;
 
         gameData.data.shipBoard[gameMessage.x][gameMessage.y] = BoardCellType.hit;
@@ -142,10 +140,17 @@ function sendUpateUI(gameData: IGameData, gameMessage: IGameMessageAttack, playe
 }
 
 export function initGame(startGameData: IStartGameData, networkChannel: INetworkChannel, playerID: string) {
+    const shipStatus: IShipStatus[] = startGameData.shipData.map((s) => ({
+        hitPoints: s.size,
+        shipDirection: "y" as shipDirection,
+        x: 0,
+        y: 0,
+    }));
+
     const gameData: IGameData = {
         data: {
             shipBoard: generateBoard(startGameData),
-            shipHitPoints: startGameData.shipData.map((s) => s.size),
+            shipStatus,
             targetBoard: generateBoard(startGameData),
         },
         id: playerID,
