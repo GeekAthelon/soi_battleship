@@ -108,7 +108,7 @@ function setupTests(desc: string, networkPubSub: INetworkPubSub) {
     });
 }
 
-describe.only(`sameProcessnetworkPubSub`, function() {
+describe(`sameProcessnetworkPubSub`, function() {
     it(`Runs tests`, function() {
         setupTests("sameProcessnetworkPubSub", sameProcessnetworkPubSub.init());
     });
