@@ -20,7 +20,7 @@ export async function handleChallenge(gameMessage: IGameMessageChallenge) {
         },
         dangerMode: false,
         icon: "",
-        text: `${gameMessage.name} has challenged you to a game`,
+        text: `${gameMessage.name} has challenged you to a game.`,
         title: "You have been challenged!",
     });
 

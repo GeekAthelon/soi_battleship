@@ -43,13 +43,31 @@ const loginPlayer = async (loginMessage: postMessage.IInitalizeIframe) => {
 
     const globalChannel = pubSub.connect(loginMessage.id, "*");
 
+    const challengeSender = globalChannel.makeSender<IGameMessageChallenge>(ZMessageTypes.challenge);
     const challengeReceiver = globalChannel.makeReceiver<IGameMessageChallenge>(ZMessageTypes.challenge);
+    const challengeReponseSender =
+        globalChannel.makeSender<IGamemessageChallengeResponse>(ZMessageTypes.challengeResponse);
+    const challengeReponseReceiver =
+        globalChannel.makeReceiver<IGamemessageChallengeResponse>(ZMessageTypes.challengeResponse);
+
+    challengeReponseReceiver((gameMessage) => {
+        if (gameMessage.target !== loginMessage.id) {
+            return;
+        }
+
+        swal(`Is accepted: ${gameMessage.isAccepted}`);
+    });
+
     challengeReceiver(async (gameMessage) => {
         if (gameMessage.target !== loginMessage.id) {
             return;
         }
         const isAccepted = await handleChallenge(gameMessage);
-        alert(isAccepted);
+
+        challengeReponseSender({
+            isAccepted,
+            target: gameMessage.source,
+        });
     });
 
     // const pingReceiver = globalChannel.makeReceiver<IGameMessagePing>(ZMessageTypes.ping);
@@ -81,8 +99,7 @@ const loginPlayer = async (loginMessage: postMessage.IInitalizeIframe) => {
             ],
         };
 
-        const sender = globalChannel.makeSender<IGameMessageChallenge>(ZMessageTypes.challenge);
-        sender({
+        challengeSender({
             name: loginMessage.name,
             source: loginMessage.id,
             startGameData,
