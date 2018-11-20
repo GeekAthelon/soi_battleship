@@ -1,27 +1,26 @@
-
-export interface IShipData {
+interface IShipData {
     name: string;
     size: number;
 }
 
-export interface IPlayerInfo {
+interface IPlayerInfo {
     name: string;
     id: string;
 }
-export interface IStartGameData {
+interface IStartGameData {
     boardHeight: number;
     boardWidth: number;
     playerList: IPlayerInfo[];
     shipData: IShipData[];
 }
 
-export interface IPlayer {
+interface IPlayer {
     shipBoard: number[][];
     shipHitPoints: number[];
     targetBoard: number[][];
 }
 
-export interface IGameData {
+interface IGameData {
     data: IPlayer;
     id: string;
     startGameData: IStartGameData;

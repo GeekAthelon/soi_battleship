@@ -2,7 +2,6 @@ import * as dataStore from "../lib/data-store";
 import { range } from "../lib/range";
 import * as interui from "../lib/ui-pub-sub";
 import { ZMessageTypes } from "./constants";
-import { IGameData, IPlayerInfo, IShipData, IStartGameData } from "./igamedata";
 import * as IMessage from "./imessages";
 
 export enum BoardCellType {

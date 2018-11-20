@@ -8,7 +8,6 @@ import { colors } from "../app/lib/terminal-colors";
 import * as interui from "../app/lib/ui-pub-sub";
 import * as battleShip from "../app/ts/battleship";
 import { ZMessageTypes } from "../app/ts/constants";
-import { IGameData, IPlayer, IStartGameData } from "../app/ts/igamedata";
 import { IMsgUpdateUI } from "../app/ts/imessages";
 
 const networkPubSub = sameProcessPubSub.init();

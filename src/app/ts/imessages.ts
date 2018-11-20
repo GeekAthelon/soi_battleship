@@ -1,5 +1,3 @@
-import { IGameData } from "./igamedata";
-
 export interface IMsgBase {
     id: string;
     targetPlayerId: string;
