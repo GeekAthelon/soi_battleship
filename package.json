@@ -6,7 +6,7 @@
   "scripts": {
     "2": "npm run webpack && http-server dist -o -c-1",
     "build:css": "node-sass-chokidar src/ -o src/ && tcm src --camelCase",
-    "build:ts": "tsc --project .",
+    "build:ts": "tsc --skipLibCheck --project .",
     "build": "npm run clean && npm run build:css && npm run build:ts",
     "clean": "rimraf dist build src/**/*.{js,js.map} src/app/style/*.{css,css.d.ts}",
     "webpack": "npm run build && webpack --mode=development",
@@ -67,6 +67,7 @@
   "dependencies": {
     "@types/chai": "^4.1.7",
     "firebase": "^5.5.8",
+    "svgjs": "^2.6.2",
     "sweetalert": "^2.1.2",
     "webpack-md5-hash": "0.0.6"
   }

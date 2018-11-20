@@ -8,6 +8,7 @@ import { ZMessageTypes } from "../ts/constants";
 import * as battleShip from "./battleship";
 import { handleChallenge } from "./ui/handle-challenge";
 import { addPlayer, IPlayerInfo, removePlayer } from "./ui/player-list";
+import { renderBoard } from "./ui/render-board";
 
 import "../style/ui.css";
 
@@ -76,6 +77,8 @@ const loginPlayer = async (loginMessage: postMessage.IInitalizeIframe) => {
             const gameData = battleShip.initGame(gameMessage.startGameData, channel, loginMessage.id);
             battleShip.randomizeShips(gameData);
             dataStore.save(loginMessage.id, gameData);
+
+            renderBoard(gameData);
         }
     });
 
