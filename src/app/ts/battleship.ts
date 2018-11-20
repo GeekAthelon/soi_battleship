@@ -26,14 +26,15 @@ const generateBoard = (startGameData: IStartGameData) => {
 
 export function tryPlaceShip(
     shipData: IShipData[],
+    shipStatus: IShipStatus,
     shipNumber: number,
     x: number,
     y: number,
-    direection: shipDirection,
+    direction: shipDirection,
     board: number[][]): boolean {
 
-    const xRange = direection === "h" ? range(x, x + shipData[shipNumber].size - 1) : range(x, x);
-    const yRange = direection === "v" ? range(y, y + shipData[shipNumber].size - 1) : range(y, y);
+    const xRange = direction === "h" ? range(x, x + shipData[shipNumber].size - 1) : range(x, x);
+    const yRange = direction === "v" ? range(y, y + shipData[shipNumber].size - 1) : range(y, y);
 
     for (x of xRange) {
         for (y of yRange) {
@@ -51,6 +52,11 @@ export function tryPlaceShip(
             board[x][y] = shipNumber;
         }
     }
+
+    shipStatus.x = x;
+    shipStatus.y = y;
+    shipStatus.shipDirection = direction;
+
     return true;
 }
 
@@ -75,7 +81,8 @@ export function randomizeShips(gameData: IGameData) {
             const y = getRandomInt(0, gameData.startGameData.boardHeight);
             const p: shipDirection = getRandomInt(0, 1) === 0 ? "h" : "v";
 
-            isValid = tryPlaceShip(gameData.startGameData.shipData, idx, x, y, p, gameData.data.shipBoard);
+            isValid = tryPlaceShip(gameData.startGameData.shipData, gameData.data.shipStatus[idx],
+                idx, x, y, p, gameData.data.shipBoard);
         }
     });
 }

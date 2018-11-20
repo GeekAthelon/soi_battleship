@@ -137,7 +137,10 @@ describe("Main BattleShip Engine", function() {
                 const gameData = battleShip.initGame(startGameData, networkChannel, startGameData.playerList[0].id);
 
                 const isValid = battleShip.tryPlaceShip(
-                    gameData.startGameData.shipData, shipNumber, 0, 0, "h", gameData.data.shipBoard);
+                    gameData.startGameData.shipData,
+                    gameData.data.shipStatus[shipNumber],
+                    shipNumber, 0, 0, "h", gameData.data.shipBoard);
+
                 assert.ok(isValid, "isValid");
                 testBoardValid(gameData.data.shipBoard, gameData, shipNumber);
             });
@@ -155,7 +158,10 @@ describe("Main BattleShip Engine", function() {
                 const gameData = battleShip.initGame(startGameData, networkChannel, startGameData.playerList[0].id);
 
                 const isValid = battleShip.tryPlaceShip(
-                    gameData.startGameData.shipData, shipNumber, 0, 0, "v", gameData.data.shipBoard);
+                    gameData.startGameData.shipData,
+                    gameData.data.shipStatus[shipNumber],
+                    shipNumber, 0, 0, "v", gameData.data.shipBoard);
+
                 assert.ok(isValid, "isValid");
                 testBoardValid(gameData.data.shipBoard, gameData, shipNumber);
             });
@@ -198,7 +204,9 @@ describe("Main BattleShip Engine", function() {
 
                     const { x, y, direction, result } = t;
                     const isValid = battleShip.tryPlaceShip(
-                        gameData.startGameData.shipData, shipNumber, x, y, direction, gameData.data.shipBoard);
+                        gameData.startGameData.shipData,
+                        gameData.data.shipStatus[shipNumber],
+                        shipNumber, x, y, direction, gameData.data.shipBoard);
 
                     assert.equal(result, isValid, `isValid ${x}, ${y}:${result} [${isValid}]`);
 
@@ -243,7 +251,10 @@ describe("Main BattleShip Engine", function() {
             const manuallyPlaceShips = (gameData: IGameData) => {
                 for (let i = 0; i < gameData.startGameData.shipData.length; i++) {
                     const isValid = battleShip.tryPlaceShip(
-                        gameData.startGameData.shipData, i, i * 2, 0, "v", gameData.data.shipBoard);
+                        gameData.startGameData.shipData,
+                        gameData.data.shipStatus[i],
+                        i, i * 2, 0, "v", gameData.data.shipBoard);
+
                     if (!isValid) {
                         throw new Error("Could not manually place ships.");
                     }
