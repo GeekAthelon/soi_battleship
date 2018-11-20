@@ -1,5 +1,6 @@
 export const ZMessageTypes = {
     attack: "ATTACK",
     attackResponse: "attack-response",
+    challenge: "challenge",
     ping: "ping",
 };

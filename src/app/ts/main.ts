@@ -75,26 +75,32 @@ const loginPlayer = async (loginMessage: postMessage.IInitalizeIframe) => {
 
     const globalChannel = pubSub.connect(loginMessage.id, "*");
 
-    // channel1.sub("pong", (msg) => {
-    //     swal("Pong received " + JSON.stringify(msg) + ":" + loginMessage.id);
-    // });
-
-    // if (loginMessage.id === "p1") {
-    //     swal("Pong sent");
-    //     channel1.pub("pong", "A message from " + loginMessage.id);
-    // }
-
-    const pingReceiver = globalChannel.makeReceiver<IGameMessagePing>(ZMessageTypes.ping);
-    const pingSender = globalChannel.makeSender<IGameMessagePing>(ZMessageTypes.ping);
-
-    pingReceiver((gameMsg) => {
-        swal("Good message " + gameMsg.message);
+    const challengeReceiver = globalChannel.makeReceiver<IGameMessageChallenge>(ZMessageTypes.challenge);
+    challengeReceiver((gameMessage) => {
+        if (gameMessage.target !== loginMessage.id) {
+            return;
+        }
+        swal(`You have been challeneged by ${gameMessage.source}`);
     });
 
-    pingSender({ message: `Player ${loginMessage.id} sends a ping` });
+    // const pingReceiver = globalChannel.makeReceiver<IGameMessagePing>(ZMessageTypes.ping);
+    // const pingSender = globalChannel.makeSender<IGameMessagePing>(ZMessageTypes.ping);
+
+    // pingReceiver((gameMsg) => {
+    //     swal("Good message " + gameMsg.message);
+    // });
+
+    // pingSender({ message: `Player ${loginMessage.id} sends a ping` });
 
     const challengeOpponent = (opponent: IPlayerInfo) => {
-        alert(opponent);
+        swal(`Challenging ${opponent.name}`);
+
+        const sender = globalChannel.makeSender<IGameMessageChallenge>(ZMessageTypes.challenge);
+        sender({
+            name: "ME!",
+            source: loginMessage.id,
+            target: opponent.id,
+        });
     };
 
     // There is weird race condition where when you refresh the page, the user can end up
