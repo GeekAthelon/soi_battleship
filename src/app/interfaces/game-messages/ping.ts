@@ -1,0 +1,3 @@
+interface IGameMessagePing {
+    message: string;
+}
