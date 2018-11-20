@@ -1,4 +1,5 @@
 import swal from "sweetalert";
+import * as dataStore from "../lib/data-store";
 import { firebaseNickJoiner } from "../lib/firebase-nick-joiner";
 import { initFirebase } from "../lib/firebase-pub";
 import * as firebasePubSub from "../lib/firebase-pub-sub";
@@ -68,6 +69,14 @@ const loginPlayer = async (loginMessage: postMessage.IInitalizeIframe) => {
             isAccepted,
             target: gameMessage.source,
         });
+
+        const channel = pubSub.connect(loginMessage.id, gameMessage.target);
+
+        if (isAccepted) {
+            const gameData = battleShip.initGame(gameMessage.startGameData, channel, loginMessage.id);
+            battleShip.randomizeShips(gameData);
+            dataStore.save(loginMessage.id, gameData);
+        }
     });
 
     // const pingReceiver = globalChannel.makeReceiver<IGameMessagePing>(ZMessageTypes.ping);
