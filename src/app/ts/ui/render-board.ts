@@ -20,7 +20,6 @@ const nodePrettyPrint: INodePrettyPrint[] = [
 ];
 const def: INodePrettyPrint = { id: -1, color: "white", symbol: "?" };
 
-
 function renderOne(gameData: IGameData, board: number[][], targetElement: HTMLElement) {
     // define document width and height
     const width = 450;
@@ -38,7 +37,6 @@ function renderOne(gameData: IGameData, board: number[][], targetElement: HTMLEl
     // create SVG document and set its size
     const draw = SVG(targetElement).size(width, height);
     draw.viewbox(0, 0, width, height);
-
 
     for (const y of range(0, gameData.startGameData.boardHeight - 1)) {
         for (const x of range(0, gameData.startGameData.boardWidth - 1)) {
