@@ -12,6 +12,8 @@ export enum BoardCellType {
     miss = 103,
 }
 
+export type shipDirections = "h" | "v";
+
 const generateBoard = (startGameData: IStartGameData) => {
     const board: number[][] = [];
     for (const x of range(0, startGameData.boardWidth - 1)) {
@@ -29,11 +31,11 @@ export function tryPlaceShip(
     shipNumber: number,
     x: number,
     y: number,
-    position: "h" | "v",
+    direection: shipDirections,
     board: number[][]): boolean {
 
-    const xRange = position === "h" ? range(x, x + shipData[shipNumber].size - 1) : range(x, x);
-    const yRange = position === "v" ? range(y, y + shipData[shipNumber].size - 1) : range(y, y);
+    const xRange = direection === "h" ? range(x, x + shipData[shipNumber].size - 1) : range(x, x);
+    const yRange = direection === "v" ? range(y, y + shipData[shipNumber].size - 1) : range(y, y);
 
     for (x of xRange) {
         for (y of yRange) {
@@ -73,7 +75,7 @@ export function randomizeShips(gameData: IGameData) {
 
             const x = getRandomInt(0, gameData.startGameData.boardWidth);
             const y = getRandomInt(0, gameData.startGameData.boardHeight);
-            const p: "h" | "v" = getRandomInt(0, 1) === 0 ? "h" : "v";
+            const p: shipDirections = getRandomInt(0, 1) === 0 ? "h" : "v";
 
             isValid = tryPlaceShip(gameData.startGameData.shipData, idx, x, y, p, gameData.data.shipBoard);
         }

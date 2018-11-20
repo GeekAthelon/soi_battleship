@@ -60,7 +60,7 @@ describe("Main BattleShip Engine", function() {
     interface ITestLoop {
         x: number;
         y: number;
-        p: "h" | "v";
+        direction: battleShip.shipDirections;
         result: boolean;
     }
 
@@ -170,25 +170,25 @@ describe("Main BattleShip Engine", function() {
                 startGameData.boardWidth = startGameData.shipData[shipNumber].size;
 
                 const tests: ITestLoop[] = [
-                    { x: 0, y: 0, p: "h", result: true },
-                    { x: 0, y: 1, p: "h", result: true },
-                    { x: 0, y: -1, p: "h", result: false },
-                    { x: 1, y: 1, p: "h", result: false },
-                    { x: 1, y: 0, p: "h", result: false },
-                    { x: 1, y: -1, p: "h", result: false },
-                    { x: -1, y: 0, p: "h", result: false },
-                    { x: -1, y: 1, p: "h", result: false },
-                    { x: -1, y: -1, p: "h", result: false },
+                    { x: 0, y: 0, direction: "h", result: true },
+                    { x: 0, y: 1, direction: "h", result: true },
+                    { x: 0, y: -1, direction: "h", result: false },
+                    { x: 1, y: 1, direction: "h", result: false },
+                    { x: 1, y: 0, direction: "h", result: false },
+                    { x: 1, y: -1, direction: "h", result: false },
+                    { x: -1, y: 0, direction: "h", result: false },
+                    { x: -1, y: 1, direction: "h", result: false },
+                    { x: -1, y: -1, direction: "h", result: false },
 
-                    { x: 0, y: 0, p: "v", result: true },
-                    { x: 0, y: 1, p: "v", result: false },
-                    { x: 0, y: -1, p: "v", result: false },
-                    { x: 1, y: 1, p: "v", result: false },
-                    { x: 1, y: 0, p: "v", result: true },
-                    { x: 1, y: -1, p: "v", result: false },
-                    { x: -1, y: 0, p: "v", result: false },
-                    { x: -1, y: 1, p: "v", result: false },
-                    { x: -1, y: -1, p: "v", result: false },
+                    { x: 0, y: 0, direction: "v", result: true },
+                    { x: 0, y: 1, direction: "v", result: false },
+                    { x: 0, y: -1, direction: "v", result: false },
+                    { x: 1, y: 1, direction: "v", result: false },
+                    { x: 1, y: 0, direction: "v", result: true },
+                    { x: 1, y: -1, direction: "v", result: false },
+                    { x: -1, y: 0, direction: "v", result: false },
+                    { x: -1, y: 1, direction: "v", result: false },
+                    { x: -1, y: -1, direction: "v", result: false },
                 ];
 
                 tests.forEach((t) => {
@@ -196,9 +196,9 @@ describe("Main BattleShip Engine", function() {
                         (startGameData.playerList[0].id, startGameData.playerList[1].id);
                     const gameData = battleShip.initGame(startGameData, networkChannel, startGameData.playerList[0].id);
 
-                    const { x, y, p, result } = t;
+                    const { x, y, direction, result } = t;
                     const isValid = battleShip.tryPlaceShip(
-                        gameData.startGameData.shipData, shipNumber, x, y, p, gameData.data.shipBoard);
+                        gameData.startGameData.shipData, shipNumber, x, y, direction, gameData.data.shipBoard);
 
                     assert.equal(result, isValid, `isValid ${x}, ${y}:${result} [${isValid}]`);
 
