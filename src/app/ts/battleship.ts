@@ -4,12 +4,13 @@ import * as interui from "../lib/ui-pub-sub";
 import { ZMessageTypes } from "./constants";
 import * as IMessage from "./imessages";
 
+export const boardCellShipEnds = 100;
 export enum BoardCellType {
     // Numbers below 100 are for ships
-    water = 100,
-    ship = 101,
-    hit = 102,
-    miss = 103,
+    water = boardCellShipEnds + 1,
+    ship = boardCellShipEnds + 2,
+    hit = boardCellShipEnds + 3,
+    miss = boardCellShipEnds + 4,
 }
 
 const generateBoard = (startGameData: IStartGameData) => {
@@ -33,8 +34,9 @@ export function tryPlaceShip(
     direction: shipDirection,
     board: number[][]): boolean {
 
-    const xRange = direction === "h" ? range(x, x + shipData[shipNumber].size - 1) : range(x, x);
-    const yRange = direction === "v" ? range(y, y + shipData[shipNumber].size - 1) : range(y, y);
+    const shipSize = shipData[shipNumber].size;
+    const xRange = direction === "h" ? range(x, x + shipSize - 1) : range(x, x);
+    const yRange = direction === "v" ? range(y, y + shipSize - 1) : range(y, y);
 
     for (x of xRange) {
         for (y of yRange) {
