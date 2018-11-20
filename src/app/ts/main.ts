@@ -52,14 +52,6 @@ const loginPlayer = async (loginMessage: postMessage.IInitalizeIframe) => {
     const challengeReponseReceiver =
         globalChannel.makeReceiver<IGamemessageChallengeResponse>(ZMessageTypes.challengeResponse);
 
-    challengeReponseReceiver((gameMessage) => {
-        if (gameMessage.target !== loginMessage.id) {
-            return;
-        }
-
-        swal(`Is accepted: ${gameMessage.isAccepted}`);
-    });
-
     challengeReceiver(async (gameMessage) => {
         if (gameMessage.target !== loginMessage.id) {
             return;
@@ -82,15 +74,6 @@ const loginPlayer = async (loginMessage: postMessage.IInitalizeIframe) => {
         }
     });
 
-    // const pingReceiver = globalChannel.makeReceiver<IGameMessagePing>(ZMessageTypes.ping);
-    // const pingSender = globalChannel.makeSender<IGameMessagePing>(ZMessageTypes.ping);
-
-    // pingReceiver((gameMsg) => {
-    //     swal("Good message " + gameMsg.message);
-    // });
-
-    // pingSender({ message: `Player ${loginMessage.id} sends a ping` });
-
     const challengeOpponent = (opponent: IPlayerInfo) => {
         swal(`Challenging ${opponent.name}`);
 
@@ -107,7 +90,6 @@ const loginPlayer = async (loginMessage: postMessage.IInitalizeIframe) => {
                 { name: "Cruiser", size: 3 },
                 { name: "Submarine", size: 3 },
                 { name: "Destroyer", size: 2 },
-                { name: "One Hit Wonder", size: 1 },
             ],
         };
 
@@ -116,6 +98,20 @@ const loginPlayer = async (loginMessage: postMessage.IInitalizeIframe) => {
             source: loginMessage.id,
             startGameData,
             target: opponent.id,
+        });
+
+        challengeReponseReceiver((gameMessage) => {
+            const channel = pubSub.connect(loginMessage.id, gameMessage.target);
+
+            if (gameMessage.target !== loginMessage.id) {
+                return;
+            }
+            if (gameMessage.isAccepted) {
+                const gameData = battleShip.initGame(startGameData, channel, loginMessage.id);
+                battleShip.randomizeShips(gameData);
+                dataStore.save(loginMessage.id, gameData);
+                renderBoard(gameData);
+            }
         });
     };
 

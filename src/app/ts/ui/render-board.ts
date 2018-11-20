@@ -31,13 +31,10 @@ function renderGrid(gameData: IGameData, board: number[][], gridSize: number, dr
 
             draw.rect(gridSize, gridSize)
                 .stroke("white")
-                .move(px, py);
-
-            if (cell >= battleShip.boardCellShipEnds) {
-                draw.circle(gridSize * .5)
-                    .fill(fmt.color)
-                    .center(px + (gridSize / 2), py + (gridSize / 2));
-            }
+                .move(px, py)
+                .click(() => {
+                    alert("You clicked on the board");
+                });
         }
     }
 }
@@ -88,7 +85,10 @@ function renderPegs(gameData: IGameData, board: number[][], gridSize: number, dr
 
             draw.circle(gridSize * .5)
                 .fill(fmt.color)
-                .center(px + (gridSize / 2), py + (gridSize / 2));
+                .center(px + (gridSize / 2), py + (gridSize / 2))
+                .click(() => {
+                    alert("You clicked on a peg");
+                });
         }
     }
 }
