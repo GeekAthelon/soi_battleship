@@ -23,7 +23,7 @@ export function init(channel: INetworkChannel) {
         attackResponseP:
             () => promisify<IGameMessageAttackResponse>(ZMessageTypes.attackResponse),
         attackResponseReceiverP:
-            promisify<IGameMessageAttackResponse>(ZMessageTypes.attackResponse),
+            () => promisify<IGameMessageAttackResponse>(ZMessageTypes.attackResponse),
         attackSender:
             channel.makeSender<IGameMessageAttack>(ZMessageTypes.attack),
         challengeReceiverP:

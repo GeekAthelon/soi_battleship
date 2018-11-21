@@ -1,5 +1,6 @@
 import * as dataStore from "../lib/data-store";
 import { ZMessageTypes } from "../lib/nio";
+import * as nioPrep from "../lib/nio";
 import { range } from "../lib/range";
 import * as interui from "../lib/ui-pub-sub";
 import * as IMessage from "./imessages";
@@ -149,6 +150,8 @@ function sendUpateUI(gameData: IGameData, gameMessage: IGameMessageAttack, playe
 }
 
 export function initGame(startGameData: IStartGameData, networkChannel: INetworkChannel, playerID: string) {
+    const nio = nioPrep.init(networkChannel);
+
     const shipStatus: IShipStatus[] = startGameData.shipData.map((s) => ({
         hitPoints: s.size,
         shipDirection: "y" as shipDirection,
@@ -169,31 +172,30 @@ export function initGame(startGameData: IStartGameData, networkChannel: INetwork
     const player = gameData.startGameData.playerList.filter((p) => p.id === playerID)[0];
     const opponent = gameData.startGameData.playerList.filter((p) => p.id !== playerID)[0];
 
-    const attackReceiver = networkChannel.makeReceiver<IGameMessageAttack>
-        (ZMessageTypes.attack);
+    const attackReponseLoop = async () => {
+        const gameMessage = await nio.attackResponseReceiverP();
 
-    const attackResponseReceiver = networkChannel.makeReceiver<IGameMessageAttackResponse>
-        (ZMessageTypes.attackResponse);
-
-    attackResponseReceiver(async (gameMessage) => {
         const currentGameData = await dataStore.load(playerID);
         processAttackResponse(currentGameData, gameMessage);
 
         sendUpateUI(currentGameData, gameMessage, player, opponent);
         await dataStore.save(playerID, currentGameData);
-    });
+        attackReponseLoop();
+    };
+    attackReponseLoop();
 
-    attackReceiver(async (gameMessage) => {
-        const attackReplySender = networkChannel.makeSender<IGameMessageAttackResponse>(ZMessageTypes.attackResponse);
-
+    const attackReceiverLoop = async () => {
+        const gameMessage = await nio.attackReceiverP();
         const currentGameData = await dataStore.load(playerID);
         const responseMessage = await processAttack(currentGameData, gameMessage, player, opponent);
 
-        attackReplySender(responseMessage);
+        nio.attackReplySender(responseMessage);
 
         await dataStore.save(playerID, currentGameData);
         sendUpateUI(currentGameData, gameMessage, player, opponent);
-    });
+        attackReceiverLoop();
+    };
+    attackReceiverLoop();
 
     return gameData;
 }
