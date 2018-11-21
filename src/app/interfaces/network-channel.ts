@@ -11,7 +11,8 @@ interface INetworkChannel {
     sub: (name: string, fn: INetworkPubSubSubscription) => void;
     unsub: (name: string, fn: INetworkPubSubSubscription) => void;
     pubT: <T extends {}>(id: string, arg: T) => void;
-    subT: <T extends {}> (name: string, fn: INetworkPubSubSubscriptionT<T>) => void;
+    subT: <T extends {}> (name: string, fn: INetworkPubSubSubscriptionT<T>, once?: boolean) => void;
+    onceT: <T extends {}>(name: string, fn: INetworkPubSubSubscriptionT<T>) => void;
     makeReceiver: NetworkPubSubReceiver;
     makeSender: NetWorkPubSubSender;
 }

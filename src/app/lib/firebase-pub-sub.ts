@@ -70,7 +70,7 @@ export function init(db: firebase.database.Database): INetworkPubSub {
             }, 1);
         };
 
-        const subT = <T extends {}>(name: string, fn: INetworkPubSubSubscriptionT<T>) => {
+        const subT = <T extends {}>(name: string, fn: INetworkPubSubSubscriptionT<T>, once: boolean = false) => {
             const key = makeKeyName2(receiverPrefix, name);
             if (enableLogging) { console.log("Subscribing to " + key); }
             if (!registry[key]) {
@@ -78,6 +78,10 @@ export function init(db: firebase.database.Database): INetworkPubSub {
             } else {
                 registry[key].push(fn);
             }
+        };
+
+        const onceT = <T extends {}>(name: string, fn: INetworkPubSubSubscriptionT<T>) => {
+            subT<T>(name, fn, true);
         };
 
         const republish = (name: string, arg: any) => {
@@ -158,6 +162,7 @@ export function init(db: firebase.database.Database): INetworkPubSub {
         return {
             makeReceiver,
             makeSender,
+            onceT,
             pub,
             pubT,
             sub,

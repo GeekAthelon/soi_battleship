@@ -42,6 +42,34 @@ function setupTests(desc: string, networkPubSub: INetworkPubSub) {
             setTimeout(foo, 10);
         });
 
+        it("onceT triggers only once", (done) => {
+            const eventName = networkPubSub.getUniqueTrigger();
+            let counter = 0;
+
+            channel2.onceT<boolean>(eventName, (arg) => {
+                counter++;
+            });
+
+            channel2.onceT<boolean>(eventName, (arg) => {
+                counter++;
+            });
+
+            channel1.pubT<boolean>(eventName, true);
+            channel1.pubT<boolean>(eventName, true);
+            channel1.pubT<boolean>(eventName, true);
+            channel1.pubT<boolean>(eventName, true);
+            channel1.pubT<boolean>(eventName, true);
+
+            setTimeout(() => {
+                channel1.pubT<boolean>(eventName, true);
+            });
+
+            setTimeout(() => {
+                assert.equal(2, counter);
+                done();
+            }, 10);
+        });
+
         it("receiver and sender", (done) => {
             const eventName = networkPubSub.getUniqueTrigger();
 
@@ -108,7 +136,7 @@ function setupTests(desc: string, networkPubSub: INetworkPubSub) {
     });
 }
 
-describe(`sameProcessnetworkPubSub`, function() {
+describe.only(`sameProcessnetworkPubSub`, function() {
     it(`Runs tests`, function() {
         setupTests("sameProcessnetworkPubSub", sameProcessnetworkPubSub.init());
     });
