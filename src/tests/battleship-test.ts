@@ -2,12 +2,12 @@
 
 import * as chai from "chai";
 import * as dataStore from "../app/lib/data-store";
+import * as nioPrep from "../app/lib/nio";
 import { range } from "../app/lib/range";
 import * as sameProcessPubSub from "../app/lib/same-process-pub-sub";
 import { colors } from "../app/lib/terminal-colors";
 import * as interui from "../app/lib/ui-pub-sub";
 import * as battleShip from "../app/ts/battleship";
-import { ZMessageTypes } from "../app/ts/constants";
 import { IMsgUpdateUI } from "../app/ts/imessages";
 
 const networkPubSub = sameProcessPubSub.init();
@@ -301,14 +301,18 @@ describe("Main BattleShip Engine", function() {
                 interui.UnsubAll();
             });
 
-            let player1AttackResponse: (fn: INetworkPubSubSubscriptionT<IGameMessageAttackResponse>) => void;
-            let player1Attack: (arg: IGameMessageAttack) => void;
-
             const subUiUpdate = (id: string, callback: (msg: IMsgUpdateUI) => void) => {
                 interui.Sub(id, interui.MSG.UPDATE_UI, (msg: IMsgUpdateUI) => {
                     callback(msg);
                 });
             };
+
+            const initStartGameData = getStartGameData();
+            const initNetworkChannel = networkPubSub.connect
+                (initStartGameData.playerList[0].id, initStartGameData.playerList[1].id);
+
+            let nio1 = nioPrep.init(initNetworkChannel);
+            let nio2 = nioPrep.init(initNetworkChannel);
 
             this.beforeEach(() => {
                 const startGameData = getStartGameData();
@@ -319,8 +323,8 @@ describe("Main BattleShip Engine", function() {
                 const stack2 = networkPubSub.connect
                     (startGameData.playerList[1].id, startGameData.playerList[0].id);
 
-                player1AttackResponse = channel1.makeReceiver<IGameMessageAttackResponse>(ZMessageTypes.attackResponse);
-                player1Attack = channel1.makeSender<IGameMessageAttack>(ZMessageTypes.attack);
+                nio1 = nioPrep.init(channel1);
+                nio2 = nioPrep.init(channel1);
             });
 
             it("Attacking outside the board unsuccessful", function() {
@@ -331,16 +335,16 @@ describe("Main BattleShip Engine", function() {
                         const x = -1;
                         const y = -2;
 
-                        player1AttackResponse((msg) => {
-                            assert.strictEqual(false, msg.isSuccess);
-                            assert.strictEqual(gameData1.id, msg.playerTurn);
-                            assert.strictEqual(x, msg.x);
-                            assert.strictEqual(y, msg.y);
+                        nio1.attackSender({ x, y });
 
-                            resolve();
-                        });
+                        const msg = await nio1.attackResponseP();
 
-                        player1Attack({ x, y });
+                        assert.strictEqual(false, msg.isSuccess);
+                        assert.strictEqual(gameData1.id, msg.playerTurn);
+                        assert.strictEqual(x, msg.x);
+                        assert.strictEqual(y, msg.y);
+
+                        resolve();
                     })();
                 });
             });
@@ -365,35 +369,34 @@ describe("Main BattleShip Engine", function() {
                             }
                         };
 
-                        subUiUpdate(attackee.id, (msg: IMsgUpdateUI) => {
-                            const loadedData2 = msg.gameData;
+                        subUiUpdate(attackee.id, (uiMsg: IMsgUpdateUI) => {
+                            const loadedData2 = uiMsg.gameData;
                             const cell2 = loadedData2.data.shipBoard[x][y];
 
                             assert.strictEqual(battleShip.BoardCellType.miss, cell2, "cell2");
                             isDone();
                         });
 
-                        subUiUpdate(attacker.id, (msg: IMsgUpdateUI) => {
-                            const loadedData1 = msg.gameData;
+                        subUiUpdate(attacker.id, (uiMsg: IMsgUpdateUI) => {
+                            const loadedData1 = uiMsg.gameData;
                             const cell1 = loadedData1.data.targetBoard[x][y];
 
                             assert.strictEqual(battleShip.BoardCellType.miss, cell1, "cell1");
                             isDone();
                         });
 
-                        player1AttackResponse((msg) => {
-                            assert.strictEqual(true, msg.isSuccess, "isSuccess");
-                            assert.strictEqual(false, msg.isHit, "isHit");
-                            assert.strictEqual(false, msg.isSink, "isSink");
-                            assert.strictEqual(undefined, msg.sunkShip, "sunkShip");
-                            assert.strictEqual(attackee.id, msg.playerTurn, "playerTurn");
-                            assert.strictEqual(x, msg.x, "x");
-                            assert.strictEqual(y, msg.y, "y");
+                        nio1.attackSender({ x, y });
 
-                            isDone();
-                        });
+                        const msg = await nio1.attackResponseP();
+                        assert.strictEqual(true, msg.isSuccess, "isSuccess");
+                        assert.strictEqual(false, msg.isHit, "isHit");
+                        assert.strictEqual(false, msg.isSink, "isSink");
+                        assert.strictEqual(undefined, msg.sunkShip, "sunkShip");
+                        assert.strictEqual(attackee.id, msg.playerTurn, "playerTurn");
+                        assert.strictEqual(x, msg.x, "x");
+                        assert.strictEqual(y, msg.y, "y");
 
-                        player1Attack({ x, y });
+                        isDone();
                     })();
                 });
             });
@@ -418,8 +421,8 @@ describe("Main BattleShip Engine", function() {
                             }
                         };
 
-                        subUiUpdate(attackee.id, (msg: IMsgUpdateUI) => {
-                            const loadedData2 = msg.gameData;
+                        subUiUpdate(attackee.id, (uiMsg: IMsgUpdateUI) => {
+                            const loadedData2 = uiMsg.gameData;
                             const cell2 = loadedData2.data.shipBoard[x][y];
 
                             const startGameData = getStartGameData();
@@ -433,27 +436,26 @@ describe("Main BattleShip Engine", function() {
                             isDone();
                         });
 
-                        subUiUpdate(attacker.id, (msg: IMsgUpdateUI) => {
-                            const loadedData1 = msg.gameData;
+                        subUiUpdate(attacker.id, (uiMsg: IMsgUpdateUI) => {
+                            const loadedData1 = uiMsg.gameData;
                             const cell1 = loadedData1.data.targetBoard[x][y];
 
                             assert.strictEqual(battleShip.BoardCellType.hit, cell1, "cell1");
                             isDone();
                         });
 
-                        player1AttackResponse((msg) => {
-                            assert.strictEqual(true, msg.isSuccess, "isSuccess");
-                            assert.strictEqual(true, msg.isHit, "isHit");
-                            assert.strictEqual(false, msg.isSink, "isSink");
-                            assert.strictEqual(undefined, msg.sunkShip, "sunkShip");
-                            assert.strictEqual(attackee.id, msg.playerTurn, "playerTurn");
-                            assert.strictEqual(x, msg.x, "x");
-                            assert.strictEqual(y, msg.y, "y");
+                        nio1.attackSender({ x, y });
 
-                            isDone();
-                        });
+                        const msg = await nio1.attackResponseP();
+                        assert.strictEqual(true, msg.isSuccess, "isSuccess");
+                        assert.strictEqual(true, msg.isHit, "isHit");
+                        assert.strictEqual(false, msg.isSink, "isSink");
+                        assert.strictEqual(undefined, msg.sunkShip, "sunkShip");
+                        assert.strictEqual(attackee.id, msg.playerTurn, "playerTurn");
+                        assert.strictEqual(x, msg.x, "x");
+                        assert.strictEqual(y, msg.y, "y");
 
-                        player1Attack({ x, y });
+                        isDone();
                     })();
                 });
             });
@@ -478,8 +480,8 @@ describe("Main BattleShip Engine", function() {
                             }
                         };
 
-                        subUiUpdate(attackee.id, (msg: IMsgUpdateUI) => {
-                            const loadedData2 = msg.gameData;
+                        subUiUpdate(attackee.id, (uiMsg: IMsgUpdateUI) => {
+                            const loadedData2 = uiMsg.gameData;
                             const cell2 = loadedData2.data.shipBoard[x][y];
 
                             const startGameData = getStartGameData();
@@ -491,27 +493,26 @@ describe("Main BattleShip Engine", function() {
                             isDone();
                         });
 
-                        subUiUpdate(attacker.id, (msg: IMsgUpdateUI) => {
-                            const loadedData1 = msg.gameData;
+                        subUiUpdate(attacker.id, (uiMsg: IMsgUpdateUI) => {
+                            const loadedData1 = uiMsg.gameData;
                             const cell1 = loadedData1.data.targetBoard[x][y];
 
                             assert.strictEqual(battleShip.BoardCellType.hit, cell1, "cell1");
                             isDone();
                         });
 
-                        player1AttackResponse((msg) => {
-                            assert.strictEqual(true, msg.isSuccess, "isSuccess");
-                            assert.strictEqual(true, msg.isHit, "isHit");
-                            assert.strictEqual(true, msg.isSink, "isSink");
-                            assert.strictEqual(5, msg.sunkShip, "sunkShip");
-                            assert.strictEqual(attackee.id, msg.playerTurn, "playerTurn");
-                            assert.strictEqual(x, msg.x, "x");
-                            assert.strictEqual(y, msg.y, "y");
+                        nio1.attackSender({ x, y });
 
-                            isDone();
-                        });
+                        const msg = await nio1.attackResponseP();
+                        assert.strictEqual(true, msg.isSuccess, "isSuccess");
+                        assert.strictEqual(true, msg.isHit, "isHit");
+                        assert.strictEqual(true, msg.isSink, "isSink");
+                        assert.strictEqual(5, msg.sunkShip, "sunkShip");
+                        assert.strictEqual(attackee.id, msg.playerTurn, "playerTurn");
+                        assert.strictEqual(x, msg.x, "x");
+                        assert.strictEqual(y, msg.y, "y");
 
-                        player1Attack({ x, y });
+                        isDone();
                     })();
                 });
             });

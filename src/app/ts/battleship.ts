@@ -1,7 +1,7 @@
 import * as dataStore from "../lib/data-store";
+import { ZMessageTypes } from "../lib/nio";
 import { range } from "../lib/range";
 import * as interui from "../lib/ui-pub-sub";
-import { ZMessageTypes } from "./constants";
 import * as IMessage from "./imessages";
 
 export const boardCellShipEnds = 100;
