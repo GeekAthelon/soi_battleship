@@ -3,8 +3,8 @@ import * as dataStore from "../lib/data-store";
 import { firebaseNickJoiner } from "../lib/firebase-nick-joiner";
 import { initFirebase } from "../lib/firebase-pub";
 import * as firebasePubSub from "../lib/firebase-pub-sub";
+import * as nioPrep from "../lib/nio";
 import * as postMessage from "../lib/post-message";
-import { ZMessageTypes } from "../ts/constants";
 import * as battleShip from "./battleship";
 import { handleChallenge } from "./ui/handle-challenge";
 import { addPlayer, IPlayerInfo, removePlayer } from "./ui/player-list";
@@ -44,22 +44,16 @@ const loginPlayer = async (loginMessage: postMessage.IInitalizeIframe) => {
     const pubSub = firebasePubSub.init(db);
 
     const globalChannel = pubSub.connect(loginMessage.id, "*");
+    const globalIo = nioPrep.init(globalChannel);
 
-    const challengeSender = globalChannel.makeSender<IGameMessageChallenge>(ZMessageTypes.challenge);
-    const challengeReceiver = globalChannel.makeOnceReceiver<IGameMessageChallenge>(ZMessageTypes.challenge);
-
-    const challengeReponseSender =
-        globalChannel.makeSender<IGamemessageChallengeResponse>(ZMessageTypes.challengeResponse);
-    const challengeReponseReceiver =
-        globalChannel.makeReceiver<IGamemessageChallengeResponse>(ZMessageTypes.challengeResponse);
-
-    challengeReceiver(async (gameMessage) => {
+    const waitForChallenges = async () => {
+        const gameMessage = await globalIo.challengeReceiverP();
         if (gameMessage.target !== loginMessage.id) {
             return;
         }
         const isAccepted = await handleChallenge(gameMessage);
 
-        challengeReponseSender({
+        globalIo.challengeReponseSender({
             isAccepted,
             target: gameMessage.source,
         });
@@ -72,10 +66,13 @@ const loginPlayer = async (loginMessage: postMessage.IInitalizeIframe) => {
             dataStore.save(loginMessage.id, gameData);
 
             renderBoard(gameData);
+        } else {
+            waitForChallenges();
         }
-    });
+    };
+    waitForChallenges();
 
-    const challengeOpponent = (opponent: IPlayerInfo) => {
+    const challengeOpponent = async (opponent: IPlayerInfo) => {
         swal(`Challenging ${opponent.name}`);
 
         const startGameData: IStartGameData = {
@@ -94,26 +91,26 @@ const loginPlayer = async (loginMessage: postMessage.IInitalizeIframe) => {
             ],
         };
 
-        challengeSender({
+        globalIo.challengeSender({
             name: loginMessage.name,
             source: loginMessage.id,
             startGameData,
             target: opponent.id,
         });
 
-        challengeReponseReceiver((gameMessage) => {
-            const channel = pubSub.connect(loginMessage.id, gameMessage.target);
+        const gameMessage = await globalIo.challengeReponseReceiverP();
+        const channel = pubSub.connect(loginMessage.id, gameMessage.target);
 
-            if (gameMessage.target !== loginMessage.id) {
-                return;
-            }
-            if (gameMessage.isAccepted) {
-                const gameData = battleShip.initGame(startGameData, channel, loginMessage.id);
-                battleShip.randomizeShips(gameData);
-                dataStore.save(loginMessage.id, gameData);
-                renderBoard(gameData);
-            }
-        });
+        if (gameMessage.target !== loginMessage.id) {
+            return;
+        }
+
+        if (gameMessage.isAccepted) {
+            const gameData = battleShip.initGame(startGameData, channel, loginMessage.id);
+            battleShip.randomizeShips(gameData);
+            dataStore.save(loginMessage.id, gameData);
+            renderBoard(gameData);
+        }
     };
 
     // There is weird race condition where when you refresh the page, the user can end up
