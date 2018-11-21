@@ -1,5 +1,3 @@
-
-
 /*
  npm --save-dev install node-sass webpack-md5-hash css-loader  style-loader sass-loader url-loader file-loader html-webpack-plugin mini-css-extract-plugin clean-webpack-plugin
 */
@@ -17,7 +15,7 @@ module.exports = {
     },
     output: {
         path: path.join(__dirname, "dist"),
-        filename: "[name].entry.js"
+        filename: "[name][hash].entry.js"
     },
     target: 'web', // node | web
     // externals: [nodeExternals()],
