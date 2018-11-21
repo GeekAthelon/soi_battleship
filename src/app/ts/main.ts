@@ -46,7 +46,8 @@ const loginPlayer = async (loginMessage: postMessage.IInitalizeIframe) => {
     const globalChannel = pubSub.connect(loginMessage.id, "*");
 
     const challengeSender = globalChannel.makeSender<IGameMessageChallenge>(ZMessageTypes.challenge);
-    const challengeReceiver = globalChannel.makeReceiver<IGameMessageChallenge>(ZMessageTypes.challenge);
+    const challengeReceiver = globalChannel.makeOnceReceiver<IGameMessageChallenge>(ZMessageTypes.challenge);
+
     const challengeReponseSender =
         globalChannel.makeSender<IGamemessageChallengeResponse>(ZMessageTypes.challengeResponse);
     const challengeReponseReceiver =

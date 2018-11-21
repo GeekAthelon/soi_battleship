@@ -19,7 +19,7 @@
     "testbundle": "mocha dist/test-bundle-node.js",
     "lint": "tslint --project . && tsfmt --verify",
     "lint:fix": "tslint --project . --fix && tsfmt -r",
-    "validate": "npm-run-all --parallel test:node lint:fix",
+    "validate": "npm-run-all --parallel test:node lint",
     "precommit": "npm run validate",
     "prepush": "npm run validate"
   },

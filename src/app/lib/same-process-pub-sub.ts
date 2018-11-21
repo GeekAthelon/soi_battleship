@@ -21,13 +21,19 @@ export function init(): INetworkPubSub {
         const enableLogging = false;
         const senderPrefix = `${source}:${target}:`;
         const receiverPrefix = `${target}:${source}:`;
-
-        const makeKeyName = (id: string, name: string) => `${id}:${name}`;
         const makeKeyName2 = (id: string, name: string, once: boolean) => `T:${id}:${name}:${!!once}`;
 
         const makeReceiver = <T extends {}>(name: string) => {
+            return makeReceiver2<T>(name, false);
+        };
+
+        const makeOnceReceiver = <T extends {}>(name: string) => {
+            return makeReceiver2<T>(name, true);
+        };
+
+        const makeReceiver2 = <T extends {}>(name: string, once: boolean) => {
             return (fn: INetworkPubSubSubscriptionT<T>) => {
-                subT<T>(name, fn);
+                subT<T>(name, fn, once);
             };
         };
 
@@ -64,31 +70,6 @@ export function init(): INetworkPubSub {
             }
         };
 
-        const onceT = <T extends {}>(name: string, fn: INetworkPubSubSubscriptionT<T>) => {
-            subT<T>(name, fn, true);
-        };
-
-        const pub = (name: string, arg: any) => {
-            const key = makeKeyName(senderPrefix, name);
-            if (enableLogging) { console.log("Publish to " + key); }
-            if (!registry[key]) { return; }
-            registry[key].forEach((x) => {
-                setTimeout(() => {
-                    x.call(null, arg);
-                });
-            }, 1);
-        };
-
-        const sub = (name: string, fn: INetworkPubSubSubscription) => {
-            const key = makeKeyName(receiverPrefix, name);
-            if (enableLogging) { console.log("Subscribing to " + key); }
-            if (!registry[key]) {
-                registry[key] = [fn];
-            } else {
-                registry[key].push(fn);
-            }
-        };
-
         const removeSub = (key: string, fn: INetworkPubSubSubscription) => {
             const list = registry[key];
             if (!list) {
@@ -104,20 +85,12 @@ export function init(): INetworkPubSub {
             }
         };
 
-        const unsub = (name: string, fn: INetworkPubSubSubscription) => {
-            const key = makeKeyName(receiverPrefix, name);
-            removeSub(key, fn);
-        };
-
         return {
+            makeOnceReceiver,
             makeReceiver,
             makeSender,
-            onceT,
-            pub,
             pubT,
-            sub,
             subT,
-            unsub,
         };
     }
     return {

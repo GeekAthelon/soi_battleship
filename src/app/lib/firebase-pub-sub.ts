@@ -45,12 +45,19 @@ export function init(db: firebase.database.Database): INetworkPubSub {
         const senderPrefix = `${source}:${target}:`;
         const receiverPrefix = `${target}:${source}:`;
 
-        const makeKeyName = (id: string, name: string) => `${id}:${name}`;
-        const makeKeyName2 = (id: string, name: string) => `T:${id}:${name}`;
+        const makeKeyName2 = (id: string, name: string, once: boolean) => `T:${id}:${name}:${!!once}`;
 
         const makeReceiver = <T extends {}>(name: string) => {
+            return makeReceiver2<T>(name, false);
+        };
+
+        const makeOnceReceiver = <T extends {}>(name: string) => {
+            return makeReceiver2<T>(name, true);
+        };
+
+        const makeReceiver2 = <T extends {}>(name: string, once: boolean) => {
             return (fn: INetworkPubSubSubscriptionT<T>) => {
-                subT<T>(name, fn);
+                subT<T>(name, fn, once);
             };
         };
 
@@ -61,52 +68,30 @@ export function init(db: firebase.database.Database): INetworkPubSub {
         };
 
         const republishT = <T extends {}>(name: string, arg: T) => {
-            const key = makeKeyName2(receiverPrefix, name);
-            if (!registry[key]) { return; }
-            registry[key].forEach((x) => {
-                setTimeout(() => {
-                    x.call(null, arg);
-                });
-            }, 1);
+            [true, false].forEach((flag) => {
+                const key = makeKeyName2(receiverPrefix, name, flag);
+                const funcs = registry[key];
+                if (!funcs) { return; }
+                const cb = funcs.pop();
+                if (!cb) { return; }
+
+                if (flag) {
+                    removeSub(key, cb);
+                }
+
+                cb.call(null, arg);
+                pubT(name, arg);
+            });
         };
 
-        const subT = <T extends {}>(name: string, fn: INetworkPubSubSubscriptionT<T>, once: boolean = false) => {
-            const key = makeKeyName2(receiverPrefix, name);
+        const subT = <T extends {}>(name: string, fn: INetworkPubSubSubscriptionT<T>, once?: boolean) => {
+            const key = makeKeyName2(receiverPrefix, name, !!once);
             if (enableLogging) { console.log("Subscribing to " + key); }
             if (!registry[key]) {
                 registry[key] = [fn];
             } else {
                 registry[key].push(fn);
             }
-        };
-
-        const onceT = <T extends {}>(name: string, fn: INetworkPubSubSubscriptionT<T>) => {
-            subT<T>(name, fn, true);
-        };
-
-        const republish = (name: string, arg: any) => {
-            const key = makeKeyName(receiverPrefix, name);
-            if (enableLogging) { console.log("Publish to " + key); }
-            if (!registry[key]) { return; }
-            registry[key].forEach((x) => {
-                setTimeout(() => {
-                    x.call(null, arg);
-                });
-            }, 1);
-        };
-
-        const pub = async <T>(name: string, arg: any) => {
-            const offset = await getOffset();
-
-            const item: IFirebasePush = {
-                arg,
-                name,
-                source,
-                target,
-                timestamp: new Date().getTime() + offset,
-            };
-
-            ref.push(item);
         };
 
         const pubT = async (name: string, arg: any) => {
@@ -121,18 +106,18 @@ export function init(db: firebase.database.Database): INetworkPubSub {
             ref.push(item);
         };
 
-        const sub = (name: string, fn: INetworkPubSubSubscription) => {
-            const key = makeKeyName(receiverPrefix, name);
-            if (enableLogging) { console.log("Subscribing to " + key); }
-            if (!registry[key]) {
-                registry[key] = [fn];
-            } else {
-                registry[key].push(fn);
-            }
-        };
+        getOffset().then((offset) => {
+            ref.orderByChild("timestamp").startAt(Date.now() + offset).on("child_added", (snap) => {
+                if (snap && snap.key) {
+                    const val = snap.val() as IFirebasePush;
+                    if (val.target === target) {
+                        republishT(val.name, val.arg);
+                    }
+                }
+            });
+        });
 
-        const unsub = (name: string, fn: INetworkPubSubSubscription) => {
-            const key = makeKeyName(receiverPrefix, name);
+        const removeSub = (key: string, fn: INetworkPubSubSubscription) => {
             const list = registry[key];
             if (!list) {
                 return;
@@ -147,27 +132,12 @@ export function init(db: firebase.database.Database): INetworkPubSub {
             }
         };
 
-        getOffset().then((offset) => {
-            ref.orderByChild("timestamp").startAt(Date.now() + offset).on("child_added", (snap) => {
-                if (snap && snap.key) {
-                    const val = snap.val() as IFirebasePush;
-                    if (val.target === target) {
-                        republish(val.name, val.arg);
-                        republishT(val.name, val.arg);
-                    }
-                }
-            });
-        });
-
         return {
+            makeOnceReceiver,
             makeReceiver,
             makeSender,
-            onceT,
-            pub,
             pubT,
-            sub,
             subT,
-            unsub,
         };
     }
 
