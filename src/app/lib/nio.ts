@@ -1,9 +1,12 @@
+import { SSL_OP_NETSCAPE_CHALLENGE_BUG } from "constants";
+
 const EventNames = {
     attack: "attack",
     attackResponse: "attack-response",
     challenge: "challenge",
     challengeResponse: "challenge-response",
     ping: "ping",
+    ready: "ready",
 };
 
 export interface Inio {
@@ -16,7 +19,8 @@ export interface Inio {
     challengeReponseReceiverP: () => Promise<IGamemessageChallengeResponse>;
     challengeReponseSender: (arg: IGamemessageChallengeResponse) => void;
     challengeSender: (arg: IGameMessageChallenge) => void;
-
+    readySender: (arg: IGameMessageReady) => void;
+    readyReceiver: () => Promise<IGameMessageReady>;
 }
 
 export function init(channel: INetworkChannel): Inio {
@@ -47,5 +51,9 @@ export function init(channel: INetworkChannel): Inio {
             channel.makeSender<IGamemessageChallengeResponse>(EventNames.challengeResponse),
         challengeSender:
             channel.makeSender<IGameMessageChallenge>(EventNames.challenge),
+        readyReceiver:
+            () => promisify<IGameMessageReady>(EventNames.ready),
+        readySender:
+            channel.makeSender<IGameMessageReady>(EventNames.ready),
     };
 }

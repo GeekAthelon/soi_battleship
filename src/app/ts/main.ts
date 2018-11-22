@@ -66,9 +66,15 @@ const loginPlayer = async (loginMessage: postMessage.IInitalizeIframe) => {
             target: gameMessage.source,
         });
 
-        const channel = pubSub.connect(loginMessage.id, gameMessage.target);
-
         if (isAccepted) {
+            const channel = pubSub.connect(loginMessage.id, gameMessage.source);
+            const channelIo = nioPrep.init(channel);
+
+            window.setTimeout(() => {
+                swal("Sent ready message");
+                channelIo.readySender({ status: true });
+            }, 1 * 1000);
+
             const gameData = battleShip.initGame(gameMessage.startGameData, channel, loginMessage.id);
             battleShip.randomizeShips(gameData);
             dataStore.save(loginMessage.id, gameData);
@@ -117,13 +123,21 @@ const loginPlayer = async (loginMessage: postMessage.IInitalizeIframe) => {
         }
 
         const channel = pubSub.connect(loginMessage.id, gameMessage.target);
+        const channelIo = nioPrep.init(channel);
+
         swal.close!();
 
         const gameData = battleShip.initGame(startGameData, channel, loginMessage.id);
         battleShip.randomizeShips(gameData);
         dataStore.save(loginMessage.id, gameData);
         gameStatus.isPlaying = true;
+
         renderGame(gameData, gameStatus);
+
+        swal("Waiting on opponent");
+        await channelIo.readyReceiver();
+        swal("Opponent answered ready");
+        swal.close!();
     };
 
     // There is weird race condition where when you refresh the page, the user can end up
