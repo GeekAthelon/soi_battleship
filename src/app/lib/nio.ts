@@ -1,12 +1,25 @@
-const ZMessageTypes = {
-    attack: "ATTACK",
+const EventNames = {
+    attack: "attack",
     attackResponse: "attack-response",
     challenge: "challenge",
     challengeResponse: "challenge-response",
     ping: "ping",
 };
 
-export function init(channel: INetworkChannel) {
+export interface Inio {
+    attackReceiverP: () => Promise<IGameMessageAttack>;
+    attackReplySender: (arg: IGameMessageAttackResponse) => void;
+    attackResponseP: () => Promise<IGameMessageAttackResponse>;
+    attackResponseReceiverP: () => Promise<IGameMessageAttackResponse>;
+    attackSender: (arg: IGameMessageAttack) => void;
+    challengeReceiverP: () => Promise<IGameMessageChallenge>;
+    challengeReponseReceiverP: () => Promise<IGamemessageChallengeResponse>;
+    challengeReponseSender: (arg: IGamemessageChallengeResponse) => void;
+    challengeSender: (arg: IGameMessageChallenge) => void;
+
+}
+
+export function init(channel: INetworkChannel): Inio {
     const promisify = <T>(messageType: string) => {
         return new Promise<T>((resolve, reject) => {
             channel.makeOnceReceiver<T>(messageType)((arg: T) => {
@@ -17,22 +30,22 @@ export function init(channel: INetworkChannel) {
 
     return {
         attackReceiverP:
-            () => promisify<IGameMessageAttack>(ZMessageTypes.attack),
+            () => promisify<IGameMessageAttack>(EventNames.attack),
         attackReplySender:
-            channel.makeSender<IGameMessageAttackResponse>(ZMessageTypes.attackResponse),
+            channel.makeSender<IGameMessageAttackResponse>(EventNames.attackResponse),
         attackResponseP:
-            () => promisify<IGameMessageAttackResponse>(ZMessageTypes.attackResponse),
+            () => promisify<IGameMessageAttackResponse>(EventNames.attackResponse),
         attackResponseReceiverP:
-            () => promisify<IGameMessageAttackResponse>(ZMessageTypes.attackResponse),
+            () => promisify<IGameMessageAttackResponse>(EventNames.attackResponse),
         attackSender:
-            channel.makeSender<IGameMessageAttack>(ZMessageTypes.attack),
+            channel.makeSender<IGameMessageAttack>(EventNames.attack),
         challengeReceiverP:
-            () => promisify<IGameMessageChallenge>(ZMessageTypes.challenge),
+            () => promisify<IGameMessageChallenge>(EventNames.challenge),
         challengeReponseReceiverP:
-            () => promisify<IGamemessageChallengeResponse>(ZMessageTypes.challengeResponse),
+            () => promisify<IGamemessageChallengeResponse>(EventNames.challengeResponse),
         challengeReponseSender:
-            channel.makeSender<IGamemessageChallengeResponse>(ZMessageTypes.challengeResponse),
+            channel.makeSender<IGamemessageChallengeResponse>(EventNames.challengeResponse),
         challengeSender:
-            channel.makeSender<IGameMessageChallenge>(ZMessageTypes.challenge),
+            channel.makeSender<IGameMessageChallenge>(EventNames.challenge),
     };
 }

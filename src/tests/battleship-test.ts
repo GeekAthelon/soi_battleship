@@ -307,12 +307,8 @@ describe("Main BattleShip Engine", function() {
                 });
             };
 
-            const initStartGameData = getStartGameData();
-            const initNetworkChannel = networkPubSub.connect
-                (initStartGameData.playerList[0].id, initStartGameData.playerList[1].id);
-
-            let nio1 = nioPrep.init(initNetworkChannel);
-            let nio2 = nioPrep.init(initNetworkChannel);
+            let nio1: nioPrep.Inio;
+            let nio2: nioPrep.Inio;
 
             this.beforeEach(() => {
                 const startGameData = getStartGameData();
