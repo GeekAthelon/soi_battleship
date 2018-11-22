@@ -62,7 +62,9 @@ describe(`browser postMessage examples: Running ${amInBrowser()}`, function() {
         });
 
         describe("firebase", function() {
-            it("should get pong", () => {
+            it("should get pong", function() {
+                this.timeout(5 * 1000);
+
                 return new Promise((resolve, reject) => {
                     (async () => {
                         const iframe = await getNewIframe();
