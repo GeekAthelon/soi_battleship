@@ -301,8 +301,8 @@ describe("Main BattleShip Engine", function() {
 
             const subUiUpdate = (id: string, callback: (msg: IMsgUpdateUI) => void) => {
                 const f = (msg: IMsgUpdateUI) => {
-                    callback(msg);
                     interui.Unsub(id, interui.MSG.UPDATE_UI, f);
+                    callback(msg);
                 };
 
                 interui.Sub(id, interui.MSG.UPDATE_UI, f);
