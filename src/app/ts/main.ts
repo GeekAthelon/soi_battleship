@@ -188,7 +188,6 @@ async function mainInit(loginMessage: postMessage.IInitalizeIframe) {
             }
         };
         waitForChallenges();
-
         renderGame(null, gameStatus);
     };
 
