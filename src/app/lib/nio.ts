@@ -1,5 +1,3 @@
-import { SSL_OP_NETSCAPE_CHALLENGE_BUG } from "constants";
-
 const EventNames = {
     attack: "attack",
     attackResponse: "attack-response",

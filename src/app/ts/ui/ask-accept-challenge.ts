@@ -1,6 +1,6 @@
 import swal from "sweetalert";
 
-export async function handleChallenge(gameMessage: IGameMessageChallenge) {
+export async function askAcceptChallenge(gameMessage: IGameMessageChallenge) {
     const willAccept = await swal({
         buttons: {
             cancel: {
