@@ -80,7 +80,6 @@ export function init(db: firebase.database.Database): INetworkPubSub {
                 }
 
                 cb.call(null, arg);
-                pubT(name, arg);
             });
         };
 
