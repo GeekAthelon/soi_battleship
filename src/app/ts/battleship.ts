@@ -138,7 +138,12 @@ export async function processAttack(
     return responseMessage;
 }
 
-function sendUpateUI(gameData: IGameData, gameMessage: IGameMessageAttack, player: IPlayerInfo, opponent: IPlayerInfo) {
+function sendUpdateUI(
+    gameData: IGameData,
+    gameMessage: IGameMessageAttack,
+    player: IPlayerInfo,
+    opponent: IPlayerInfo,
+) {
     const updateUiMessage: IMessage.IMsgUpdateUI = {
         gameData,
         id: "update-ui",
@@ -171,17 +176,17 @@ export function initGame(startGameData: IStartGameData, networkChannel: INetwork
     const player = gameData.startGameData.playerList.filter((p) => p.id === playerID)[0];
     const opponent = gameData.startGameData.playerList.filter((p) => p.id !== playerID)[0];
 
-    const attackReponseLoop = async () => {
+    const attackResponseLoop = async () => {
         const gameMessage = await nio.attackResponseReceiverP();
 
         const currentGameData = await dataStore.load(playerID);
         processAttackResponse(currentGameData, gameMessage);
 
-        sendUpateUI(currentGameData, gameMessage, player, opponent);
+        sendUpdateUI(currentGameData, gameMessage, player, opponent);
         await dataStore.save(playerID, currentGameData);
-        attackReponseLoop();
+        attackResponseLoop();
     };
-    attackReponseLoop();
+    attackResponseLoop();
 
     const attackReceiverLoop = async () => {
         const gameMessage = await nio.attackReceiverP();
@@ -191,7 +196,7 @@ export function initGame(startGameData: IStartGameData, networkChannel: INetwork
         nio.attackReplySender(responseMessage);
 
         await dataStore.save(playerID, currentGameData);
-        sendUpateUI(currentGameData, gameMessage, player, opponent);
+        sendUpdateUI(currentGameData, gameMessage, player, opponent);
         attackReceiverLoop();
     };
     attackReceiverLoop();
