@@ -1,4 +1,3 @@
-
 type shipDirection = "h" | "v";
 
 interface IShipData {
@@ -33,5 +32,7 @@ interface IPlayer {
 interface IGameData {
     data: IPlayer;
     id: string;
+    readyPlayers: string[];
     startGameData: IStartGameData;
+    status: "none" | "challenged" | "started";
 }

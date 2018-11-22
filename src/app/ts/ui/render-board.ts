@@ -1,6 +1,7 @@
 import SVG from "svgjs";
 import { range } from "../../lib/range";
 import * as battleShip from "../battleship";
+import { IGameStatus } from "../main";
 
 interface INodePrettyPrint {
     id: number;
@@ -13,11 +14,19 @@ const nodePrettyPrint: INodePrettyPrint[] = [
     { id: 2, color: "yellow" },
     { id: 3, color: "orange" },
     { id: 4, color: "purple" },
-    { id: battleShip.BoardCellType.water, color: "black"},
+    { id: battleShip.BoardCellType.water, color: "black" },
     { id: battleShip.BoardCellType.miss, color: "white" },
     { id: battleShip.BoardCellType.hit, color: "red" },
 ];
 const def: INodePrettyPrint = { id: -1, color: "white" };
+
+function $(selector: string) {
+    return document.querySelector(selector) as HTMLElement;
+}
+
+function display(e: HTMLElement, mode: string) {
+    e.style.display = mode;
+}
 
 function renderGrid(gameData: IGameData, board: number[][], gridSize: number, draw: SVG.Doc) {
     for (const y of range(0, gameData.startGameData.boardHeight - 1)) {
@@ -123,14 +132,14 @@ function renderTargetBoard(
     renderPegs(gameData, board, gridSize, draw);
 }
 
-export function renderBoard(gameData: IGameData) {
+function renderGrids(gameData: IGameData) {
     const targetElement = document.querySelector(".js-target-board") as HTMLElement;
     const shipElemnet = document.querySelector(".js-ship-board") as HTMLElement;
 
     targetElement.innerHTML = "";
     shipElemnet.innerHTML = "";
 
-    const k = (() => {
+    (() => {
         if (window.screen.width) {
             const setViewport = {
                 // bigger ones, be sure to set width to the needed and likely hardcoded width
@@ -175,4 +184,39 @@ export function renderBoard(gameData: IGameData) {
 
     renderShipBoard(height, width, gridSize, gameData, gameData.data.shipBoard, shipElemnet);
     renderTargetBoard(height, width, gridSize, gameData, gameData.data.targetBoard, targetElement);
+}
+
+function showHidePlayerList(gameStatus: IGameStatus) {
+    const playerListElement = $(".js-playerlist");
+    if (gameStatus.isPlaying) {
+        display(playerListElement, "none");
+    } else {
+        display(playerListElement, "");
+    }
+}
+
+function setReadyStatus(gameData: IGameData | null, gameStatus: IGameStatus) {
+    const playerNotReadyElement = $(".js-player-not-ready");
+    const playerReadyElement = $(".js-player-is-ready");
+    const opponentNotReady = $(".js-opponent-not-ready");
+    const opponentReadyElement = $(".js-opponent-is-ready");
+
+    display(playerNotReadyElement, "none");
+    display(playerReadyElement, "none");
+    display(opponentNotReady, "none");
+    display(opponentReadyElement, "none");
+
+    if (!gameStatus.isPlaying) {
+        return;
+    }
+    display(playerNotReadyElement, "");
+    display(opponentNotReady, "");
+}
+
+export function renderGame(gameData: IGameData | null, gameStatus: IGameStatus) {
+    if (gameData) {
+        renderGrids(gameData);
+    }
+    showHidePlayerList(gameStatus);
+    setReadyStatus(gameData, gameStatus);
 }

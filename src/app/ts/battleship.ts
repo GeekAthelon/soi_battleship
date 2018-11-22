@@ -170,7 +170,9 @@ export function initGame(startGameData: IStartGameData, networkChannel: INetwork
             targetBoard: generateBoard(startGameData),
         },
         id: playerID,
+        readyPlayers: [],
         startGameData,
+        status: "started",
     };
 
     const player = gameData.startGameData.playerList.filter((p) => p.id === playerID)[0];

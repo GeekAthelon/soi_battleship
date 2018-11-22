@@ -8,9 +8,17 @@ import * as postMessage from "../lib/post-message";
 import * as battleShip from "./battleship";
 import { handleChallenge } from "./ui/handle-challenge";
 import { addPlayer, IPlayerInfo, removePlayer } from "./ui/player-list";
-import { renderBoard } from "./ui/render-board";
+import { renderGame } from "./ui/render-board";
 
 import "../style/ui.css";
+
+export interface IGameStatus {
+    isPlaying: boolean;
+}
+
+const gameStatus: IGameStatus = {
+    isPlaying: false,
+};
 
 const tryParse = (s: string) => {
     try {
@@ -64,8 +72,8 @@ const loginPlayer = async (loginMessage: postMessage.IInitalizeIframe) => {
             const gameData = battleShip.initGame(gameMessage.startGameData, channel, loginMessage.id);
             battleShip.randomizeShips(gameData);
             dataStore.save(loginMessage.id, gameData);
-
-            renderBoard(gameData);
+            gameStatus.isPlaying = true;
+            renderGame(gameData, gameStatus);
         } else {
             waitForChallenges();
         }
@@ -99,18 +107,23 @@ const loginPlayer = async (loginMessage: postMessage.IInitalizeIframe) => {
         });
 
         const gameMessage = await globalIo.challengeReponseReceiverP();
-        const channel = pubSub.connect(loginMessage.id, gameMessage.target);
-
         if (gameMessage.target !== loginMessage.id) {
             return;
         }
 
-        if (gameMessage.isAccepted) {
-            const gameData = battleShip.initGame(startGameData, channel, loginMessage.id);
-            battleShip.randomizeShips(gameData);
-            dataStore.save(loginMessage.id, gameData);
-            renderBoard(gameData);
+        if (!gameMessage.isAccepted) {
+            swal(`Your challenge was declined.`);
+            return;
         }
+
+        const channel = pubSub.connect(loginMessage.id, gameMessage.target);
+        swal.close!();
+
+        const gameData = battleShip.initGame(startGameData, channel, loginMessage.id);
+        battleShip.randomizeShips(gameData);
+        dataStore.save(loginMessage.id, gameData);
+        gameStatus.isPlaying = true;
+        renderGame(gameData, gameStatus);
     };
 
     // There is weird race condition where when you refresh the page, the user can end up
@@ -145,6 +158,8 @@ const loginPlayer = async (loginMessage: postMessage.IInitalizeIframe) => {
             }
         }
     });
+
+    renderGame(null, gameStatus);
 };
 
 window.addEventListener("message", messageHander, false);
