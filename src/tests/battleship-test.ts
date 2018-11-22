@@ -353,15 +353,17 @@ describe("Main BattleShip Engine", function() {
                         const x = attackee.startGameData.boardWidth - 1;
                         const y = attackee.startGameData.boardHeight - 1;
 
-                        let neededEventCount = 3;
+                        const doneTest: string[] = [];
+                        const expectedDone = ["1", "2", "3"];
+                        const isDone = (flag: string) => {
+                            doneTest.push(flag);
+                            doneTest.sort();
 
-                        const isDone = () => {
-                            neededEventCount--;
-                            if (neededEventCount < 0) {
-                                throw new Error("ACK... isDone called too many times");
-                            }
-                            if (neededEventCount === 0) {
+                            if (doneTest.join() === expectedDone.join()) {
                                 resolve();
+                            }
+                            if (doneTest.length > expectedDone.length) {
+                                throw new Error("ACK... isDone called too many times");
                             }
                         };
 
@@ -370,7 +372,7 @@ describe("Main BattleShip Engine", function() {
                             const cell2 = loadedData2.data.shipBoard[x][y];
 
                             assert.strictEqual(battleShip.BoardCellType.miss, cell2, "cell2");
-                            isDone();
+                            isDone("1");
                         });
 
                         subUiUpdate(attacker.id, (uiMsg: IMsgUpdateUI) => {
@@ -378,7 +380,7 @@ describe("Main BattleShip Engine", function() {
                             const cell1 = loadedData1.data.targetBoard[x][y];
 
                             assert.strictEqual(battleShip.BoardCellType.miss, cell1, "cell1");
-                            isDone();
+                            isDone("2");
                         });
 
                         nio1.attackSender({ x, y });
@@ -392,7 +394,7 @@ describe("Main BattleShip Engine", function() {
                         assert.strictEqual(x, msg.x, "x");
                         assert.strictEqual(y, msg.y, "y");
 
-                        isDone();
+                        isDone("3");
                     })();
                 });
             });
@@ -405,15 +407,17 @@ describe("Main BattleShip Engine", function() {
                         const x = 0;
                         const y = 0;
 
-                        let neededEventCount = 3;
+                        const doneTest: string[] = [];
+                        const expectedDone = ["1", "2", "3"];
+                        const isDone = (flag: string) => {
+                            doneTest.push(flag);
+                            doneTest.sort();
 
-                        const isDone = () => {
-                            neededEventCount--;
-                            if (neededEventCount < 0) {
-                                throw new Error("ACK... isDone called too many times");
-                            }
-                            if (neededEventCount === 0) {
+                            if (doneTest.join() === expectedDone.join()) {
                                 resolve();
+                            }
+                            if (doneTest.length > expectedDone.length) {
+                                throw new Error("ACK... isDone called too many times");
                             }
                         };
 
@@ -429,7 +433,7 @@ describe("Main BattleShip Engine", function() {
                             assert.notStrictEqual(
                                 startGameData.shipData[0].size,
                                 loadedData2.data.shipStatus[0].hitPoints);
-                            isDone();
+                            isDone("1");
                         });
 
                         subUiUpdate(attacker.id, (uiMsg: IMsgUpdateUI) => {
@@ -437,7 +441,7 @@ describe("Main BattleShip Engine", function() {
                             const cell1 = loadedData1.data.targetBoard[x][y];
 
                             assert.strictEqual(battleShip.BoardCellType.hit, cell1, "cell1");
-                            isDone();
+                            isDone("2");
                         });
 
                         nio1.attackSender({ x, y });
@@ -451,7 +455,7 @@ describe("Main BattleShip Engine", function() {
                         assert.strictEqual(x, msg.x, "x");
                         assert.strictEqual(y, msg.y, "y");
 
-                        isDone();
+                        isDone("3");
                     })();
                 });
             });
@@ -464,15 +468,17 @@ describe("Main BattleShip Engine", function() {
                         const x = 10;
                         const y = 0;
 
-                        let neededEventCount = 3;
+                        const doneTest: string[] = [];
+                        const expectedDone = ["1", "2", "3"];
+                        const isDone = (flag: string) => {
+                            doneTest.push(flag);
+                            doneTest.sort();
 
-                        const isDone = () => {
-                            neededEventCount--;
-                            if (neededEventCount < 0) {
-                                throw new Error("ACK... isDone called too many times");
-                            }
-                            if (neededEventCount === 0) {
+                            if (doneTest.join() === expectedDone.join()) {
                                 resolve();
+                            }
+                            if (doneTest.length > expectedDone.length) {
+                                throw new Error("ACK... isDone called too many times");
                             }
                         };
 
@@ -486,7 +492,7 @@ describe("Main BattleShip Engine", function() {
 
                             assert.strictEqual(battleShip.BoardCellType.hit, cell2, "cell2");
                             assert.strictEqual(0, loadedData2.data.shipStatus[5].hitPoints, "ship hit points");
-                            isDone();
+                            isDone("1");
                         });
 
                         subUiUpdate(attacker.id, (uiMsg: IMsgUpdateUI) => {
@@ -494,7 +500,7 @@ describe("Main BattleShip Engine", function() {
                             const cell1 = loadedData1.data.targetBoard[x][y];
 
                             assert.strictEqual(battleShip.BoardCellType.hit, cell1, "cell1");
-                            isDone();
+                            isDone("2");
                         });
 
                         nio1.attackSender({ x, y });
@@ -508,7 +514,7 @@ describe("Main BattleShip Engine", function() {
                         assert.strictEqual(x, msg.x, "x");
                         assert.strictEqual(y, msg.y, "y");
 
-                        isDone();
+                        isDone("3");
                     })();
                 });
             });
