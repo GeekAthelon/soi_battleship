@@ -292,19 +292,20 @@ describe("Main BattleShip Engine", function() {
             };
 
             this.afterEach(() => {
-                networkPubSub.DEBUGremoveAll();
-                interui.UnsubAll();
+                // Nothing
             });
 
             this.beforeEach(() => {
-                networkPubSub.DEBUGremoveAll();
-                interui.UnsubAll();
+                // Nothing
             });
 
             const subUiUpdate = (id: string, callback: (msg: IMsgUpdateUI) => void) => {
-                interui.Sub(id, interui.MSG.UPDATE_UI, (msg: IMsgUpdateUI) => {
+                const f = (msg: IMsgUpdateUI) => {
                     callback(msg);
-                });
+                    interui.Unsub(id, interui.MSG.UPDATE_UI, f);
+                };
+
+                interui.Sub(id, interui.MSG.UPDATE_UI, f);
             };
 
             let nio1: nioPrep.Inio;
