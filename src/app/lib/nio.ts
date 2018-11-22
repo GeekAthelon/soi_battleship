@@ -1,4 +1,4 @@
-export const ZMessageTypes = {
+const ZMessageTypes = {
     attack: "ATTACK",
     attackResponse: "attack-response",
     challenge: "challenge",
