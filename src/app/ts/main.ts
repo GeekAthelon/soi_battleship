@@ -17,6 +17,8 @@ enum STATES {
     INITIAL_STATE,
     WAITING,
     ISSUE_CHALLENGE,
+    WAITING_CHALLENGE_RESPONSE,
+    ACCEPT_CHALLENGE,
 }
 
 const tryParse = (s: string) => {
@@ -48,8 +50,8 @@ const messageHander = (e: MessageEvent) => {
 };
 
 export interface IGameStatus {
-    challengingPlayerId: string;
     isPlaying: boolean;
+    opponent: IPlayerInfo;
     state: STATES;
     playerId: string;
     playerName: string;
@@ -57,18 +59,70 @@ export interface IGameStatus {
 
 async function mainInit(loginMessage: postMessage.IInitalizeIframe) {
     const gameStatus: IGameStatus = {
-        challengingPlayerId: "",
         isPlaying: false,
+        opponent: {
+            id: "",
+            name: "",
+        },
         playerId: "",
         playerName: "",
         state: STATES.INITIAL_STATE,
     };
-
     const db = await initFirebase();
+
+    async function panicAndNukeDatabas() {
+        const root = db.ref();
+        root.set(null);
+    }
+
     const pubSub = firebasePubSub.init(db);
 
     const globalChannel = pubSub.connect(loginMessage.id, "*");
     const globalIo = nioPrep.init(globalChannel);
+
+    const challengeOpponent = async (opponent: IPlayerInfo) => {
+        swal(`Issuing challenge to: ${opponent.name}`);
+
+        const startGameData: IStartGameData = {
+            boardHeight: 10,
+            boardWidth: 10,
+            playerList: [
+                { name: loginMessage.name, id: loginMessage.id },
+                { name: opponent.name, id: opponent.id },
+            ],
+            shipData: [
+                { name: "Carrier", size: 5 },
+                { name: "Battleship", size: 4 },
+                { name: "Cruiser", size: 3 },
+                { name: "Submarine", size: 3 },
+                { name: "Destroyer", size: 2 },
+            ],
+        };
+
+        globalIo.challengeSender({
+            name: loginMessage.name,
+            source: loginMessage.id,
+            startGameData,
+            target: opponent.id,
+        });
+        setState(STATES.WAITING_CHALLENGE_RESPONSE);
+    };
+
+    const waitingChallengeResponse = async () => {
+        const gameMessage = await globalIo.challengeReponseReceiverP();
+        if (gameMessage.target !== loginMessage.id) {
+            return;
+        }
+
+        if (!gameMessage.isAccepted) {
+            swal(`Your challenge was declined.`);
+            setState(STATES.WAITING);
+            return;
+        }
+        swal(`Your challenge was accepted.`);
+
+        setState(STATES.WAITING);
+    };
 
     const setState = (state: STATES) => {
         gameStatus.state = state;
@@ -84,27 +138,25 @@ async function mainInit(loginMessage: postMessage.IInitalizeIframe) {
                     gameStatus.state = STATES.WAITING;
                     renderGame(null, gameStatus);
                 }
-
                 break;
             case STATES.WAITING:
                 // We are waiting for something to happen, either a challenge
                 // or a challenge response.
                 break;
             case STATES.ISSUE_CHALLENGE:
-                alert(`STATES.ISSUE_CHALLENGE to ${gameStatus.challengingPlayerId}`);
+                challengeOpponent(gameStatus.opponent);
+                break;
+            case STATES.WAITING_CHALLENGE_RESPONSE:
+                waitingChallengeResponse();
+                break;
+            case STATES.ACCEPT_CHALLENGE:
+                alert("Accepting");
                 break;
         }
     };
     setState(STATES.INITIAL_STATE);
 
     const loginPlayer = async (zloginMessage: postMessage.IInitalizeIframe) => {
-
-        // const db = await initFirebase();
-        // const pubSub = firebasePubSub.init(db);
-
-        // const globalChannel = pubSub.connect(loginMessage.id, "*");
-        // const globalIo = nioPrep.init(globalChannel);
-
         const waitForChallenges = async () => {
             const gameMessage = await globalIo.challengeReceiverP();
             if (gameMessage.target !== loginMessage.id) {
@@ -137,63 +189,6 @@ async function mainInit(loginMessage: postMessage.IInitalizeIframe) {
         };
         waitForChallenges();
 
-        const challengeOpponent = async (opponent: IPlayerInfo) => {
-            swal(`Challenging ${opponent.name}`);
-
-            const startGameData: IStartGameData = {
-                boardHeight: 10,
-                boardWidth: 10,
-                playerList: [
-                    { name: loginMessage.name, id: loginMessage.id },
-                    { name: opponent.name, id: opponent.id },
-                ],
-                shipData: [
-                    { name: "Carrier", size: 5 },
-                    { name: "Battleship", size: 4 },
-                    { name: "Cruiser", size: 3 },
-                    { name: "Submarine", size: 3 },
-                    { name: "Destroyer", size: 2 },
-                ],
-            };
-
-            globalIo.challengeSender({
-                name: loginMessage.name,
-                source: loginMessage.id,
-                startGameData,
-                target: opponent.id,
-            });
-
-            const gameMessage = await globalIo.challengeReponseReceiverP();
-            if (gameMessage.target !== loginMessage.id) {
-                return;
-            }
-
-            if (!gameMessage.isAccepted) {
-                swal(`Your challenge was declined.`);
-                return;
-            }
-
-            const channel = pubSub.connect(loginMessage.id, gameMessage.target);
-            const channelIo = nioPrep.init(channel);
-
-            swal.close!();
-
-            const gameData = battleShip.initGame(startGameData, channel, loginMessage.id);
-            battleShip.randomizeShips(gameData);
-            dataStore.save(loginMessage.id, gameData);
-            gameStatus.isPlaying = true;
-
-            renderGame(gameData, gameStatus);
-
-            swal("Waiting on opponent");
-            await channelIo.readyReceiver();
-            swal("Opponent answered ready");
-            swal.close!();
-        };
-
-        // There is weird race condition where when you refresh the page, the user can end up
-        // knocked off the list, so make the name unique to combat that problem.
-
         renderGame(null, gameStatus);
     };
 
@@ -203,6 +198,8 @@ async function mainInit(loginMessage: postMessage.IInitalizeIframe) {
             name: loginMessage.name,
         });
 
+    // There is weird race condition where when you refresh the page, the user can end up
+    // knocked off the list, so make the name unique to combat that problem.
     const userOnlineReference = db.ref("online").child(userInfo + firebaseNickJoiner + new Date().getTime());
     userOnlineReference.set(true);
     userOnlineReference.onDisconnect().remove();
@@ -215,7 +212,9 @@ async function mainInit(loginMessage: postMessage.IInitalizeIframe) {
             const playerInfo = JSON.parse(json) as IPlayerInfo;
             if (playerInfo.id !== loginMessage.id) {
                 addPlayer(playerInfo, () => {
-                    gameStatus.challengingPlayerId = playerInfo.id;
+                    const r = { ...playerInfo };
+                    r.callback = undefined;
+                    gameStatus.opponent = r;
                     setState(STATES.ISSUE_CHALLENGE);
                 });
             }
@@ -233,14 +232,14 @@ async function mainInit(loginMessage: postMessage.IInitalizeIframe) {
     });
 
     const buildAcceptChallengeQueue = async () => {
-        buildAcceptChallengeQueue();
         const gameMessage = await globalIo.challengeReceiverP();
+        buildAcceptChallengeQueue();
         if (gameMessage.target !== loginMessage.id) {
             return;
         }
+
         addChallenge({ id: gameMessage.source, name: gameMessage.name }, () => {
-            gameStatus.challengingPlayerId = gameMessage.source;
-            setState(STATES.ISSUE_CHALLENGE);
+            setState(STATES.ACCEPT_CHALLENGE);
         });
     };
     buildAcceptChallengeQueue();
