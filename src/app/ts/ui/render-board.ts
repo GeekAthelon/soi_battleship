@@ -5,20 +5,19 @@ import * as battleShip from "../battleship";
 interface INodePrettyPrint {
     id: number;
     color: string;
-    symbol: string;
 }
 
 const nodePrettyPrint: INodePrettyPrint[] = [
-    { id: 0, color: "green", symbol: "o" },
-    { id: 1, color: "grey", symbol: "o" },
-    { id: 2, color: "yellow", symbol: "o" },
-    { id: 3, color: "orange", symbol: "o" },
-    { id: 4, color: "purple", symbol: "o" },
-    { id: battleShip.BoardCellType.water, color: "cyan", symbol: "~" },
-    { id: battleShip.BoardCellType.miss, color: "white", symbol: "o" },
-    { id: battleShip.BoardCellType.hit, color: "red", symbol: "x" },
+    { id: 0, color: "green" },
+    { id: 1, color: "grey" },
+    { id: 2, color: "yellow" },
+    { id: 3, color: "orange" },
+    { id: 4, color: "purple" },
+    { id: battleShip.BoardCellType.water, color: "black"},
+    { id: battleShip.BoardCellType.miss, color: "white" },
+    { id: battleShip.BoardCellType.hit, color: "red" },
 ];
-const def: INodePrettyPrint = { id: -1, color: "white", symbol: "?" };
+const def: INodePrettyPrint = { id: -1, color: "white" };
 
 function renderGrid(gameData: IGameData, board: number[][], gridSize: number, draw: SVG.Doc) {
     for (const y of range(0, gameData.startGameData.boardHeight - 1)) {
@@ -93,11 +92,78 @@ function renderPegs(gameData: IGameData, board: number[][], gridSize: number, dr
     }
 }
 
-function renderOne(gameData: IGameData, board: number[][], targetElement: HTMLElement) {
-    // define document width and height
-    const width = 450;
-    const height = 300;
+function renderShipBoard(
+    height: number,
+    width: number,
+    gridSize: number,
+    gameData: IGameData,
+    board: number[][],
+    targetElement: HTMLElement) {
 
+    const draw = SVG(targetElement).size(width, height);
+    draw.viewbox(0, 0, width, height);
+
+    renderGrid(gameData, board, gridSize, draw);
+    renderShips(gameData, board, gridSize, draw);
+    renderPegs(gameData, board, gridSize, draw);
+}
+
+function renderTargetBoard(
+    height: number,
+    width: number,
+    gridSize: number,
+    gameData: IGameData,
+    board: number[][],
+    targetElement: HTMLElement) {
+
+    const draw = SVG(targetElement).size(width, height);
+    draw.viewbox(0, 0, width, height);
+
+    renderGrid(gameData, board, gridSize, draw);
+    renderPegs(gameData, board, gridSize, draw);
+}
+
+export function renderBoard(gameData: IGameData) {
+    const targetElement = document.querySelector(".js-target-board") as HTMLElement;
+    const shipElemnet = document.querySelector(".js-ship-board") as HTMLElement;
+
+    targetElement.innerHTML = "";
+    shipElemnet.innerHTML = "";
+
+    const k = (() => {
+        if (window.screen.width) {
+            const setViewport = {
+                // bigger ones, be sure to set width to the needed and likely hardcoded width
+                // of your site at large breakpoints
+                other: "width=1045,user-scalable=yes",
+                // smaller devices
+                phone: "width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no",
+                // current browser width
+                widthDevice: window.screen.width,
+                // your css breakpoint for mobile, etc. non-mobile first
+                widthMin: 560,
+                // add the tag based on above vars and environment
+                setMeta() {
+                    const params = (this.widthDevice <= this.widthMin) ? this.phone : this.other;
+                    const head = document.getElementsByTagName("head")[0];
+                    const viewport = document.createElement("meta");
+                    viewport.setAttribute("name", "viewport");
+                    viewport.setAttribute("content", params);
+                    head.appendChild(viewport);
+                },
+            };
+            // call it
+            setViewport.setMeta();
+        }
+    }).call(null);
+
+    const w = Math.max(document.documentElement!.clientWidth, window.innerWidth || 0);
+    const h = Math.max(document.documentElement!.clientHeight, window.innerHeight || 0);
+
+    const smallestDim = Math.min(w * .45, h);
+
+    const width = smallestDim;
+    const height = smallestDim;
     const t1 = Math.max(
         gameData.startGameData.boardHeight,
         gameData.startGameData.boardWidth,
@@ -107,18 +173,6 @@ function renderOne(gameData: IGameData, board: number[][], targetElement: HTMLEl
 
     const gridSize = Math.floor(t2 / t1);
 
-    // create SVG document and set its size
-    const draw = SVG(targetElement).size(width, height);
-    draw.viewbox(0, 0, width, height);
-
-    renderGrid(gameData, board, gridSize, draw);
-    renderShips(gameData, board, gridSize, draw);
-    renderPegs(gameData, board, gridSize, draw);
-}
-
-export function renderBoard(gameData: IGameData) {
-    const targetElement = document.querySelector(".js-target-board") as HTMLElement;
-    const shipElemnet = document.querySelector(".js-ship-board") as HTMLElement;
-
-    renderOne(gameData, gameData.data.shipBoard, shipElemnet);
+    renderShipBoard(height, width, gridSize, gameData, gameData.data.shipBoard, shipElemnet);
+    renderTargetBoard(height, width, gridSize, gameData, gameData.data.targetBoard, targetElement);
 }
