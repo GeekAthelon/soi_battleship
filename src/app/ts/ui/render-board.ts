@@ -187,12 +187,8 @@ function renderGrids(gameData: IGameData) {
 }
 
 function showHidePlayerList(gameStatus: IGameStatus) {
-    const playerListElement = $(".js-playerlist");
-    if (gameStatus.isPlaying) {
-        display(playerListElement, "none");
-    } else {
-        display(playerListElement, "");
-    }
+    const mode = gameStatus.isPlaying ? "none" : "";
+    [".js-playerlist", ".js-challengelist"].forEach((s) => display($(s), mode));
 }
 
 function setReadyStatus(gameData: IGameData | null, gameStatus: IGameStatus) {

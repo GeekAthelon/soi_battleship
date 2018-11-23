@@ -44,7 +44,7 @@ const refreshPlayerList = () => {
         li.textContent = `${player.name} [${player.id}] x${innerList.length}`;
 
         button.type = "button";
-        button.textContent = "challenge";
+        button.textContent = "Accept";
         button.addEventListener("click", () => player.callback!(player));
 
         li.appendChild(button);
