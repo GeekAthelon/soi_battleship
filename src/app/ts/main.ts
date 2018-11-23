@@ -19,6 +19,7 @@ enum STATES {
     ISSUE_CHALLENGE,
     WAITING_CHALLENGE_RESPONSE,
     ACCEPT_CHALLENGE,
+    WAITING_FOR_READY,
 }
 
 const tryParse = (s: string) => {
@@ -116,24 +117,21 @@ async function mainInit(loginMessage: postMessage.IInitalizeIframe) {
         const isAccepted = await askAcceptChallenge(gameStatus.acceptChallenge);
 
         globalIo.challengeReponseSender({
+            gameStartData: gameStatus.acceptChallenge.startGameData,
             isAccepted,
             target: gameStatus.acceptChallenge.source,
         });
 
         if (isAccepted) {
             const channel = pubSub.connect(loginMessage.id, gameStatus.acceptChallenge.source);
-            const channelIo = nioPrep.init(channel);
-
-            // window.setTimeout(() => {
-            //     swal("Sent ready message");
-            //     channelIo.readySender({ status: true });
-            // }, 1 * 1000);
 
             const gameData = battleShip.initGame(gameStatus.acceptChallenge.startGameData, channel, loginMessage.id);
             battleShip.randomizeShips(gameData);
             dataStore.save(loginMessage.id, gameData);
             gameStatus.isPlaying = true;
+
             renderGame(gameData, gameStatus);
+            setState(STATES.WAITING_FOR_READY);
         }
     };
 
@@ -148,12 +146,24 @@ async function mainInit(loginMessage: postMessage.IInitalizeIframe) {
             setState(STATES.WAITING);
             return;
         }
-        swal(`Your challenge was accepted.`);
 
-        setState(STATES.WAITING);
+        swal.close!();
+
+        const channel = pubSub.connect(loginMessage.id, gameMessage.target);
+        // const channelIo = nioPrep.init(channel);
+
+        const gameData = battleShip.initGame(gameMessage.gameStartData, channel, loginMessage.id);
+        battleShip.randomizeShips(gameData);
+        dataStore.save(loginMessage.id, gameData);
+        gameStatus.isPlaying = true;
+
+        renderGame(gameData, gameStatus);
+        setState(STATES.WAITING_FOR_READY);
     };
 
     const setState = (state: STATES) => {
+        const statusEl = document.querySelector(".js-status") as HTMLElement;
+        statusEl.innerHTML = "State : " + STATES[state];
         gameStatus.state = state;
         executeStateMachine();
     };
@@ -184,41 +194,6 @@ async function mainInit(loginMessage: postMessage.IInitalizeIframe) {
         }
     };
     setState(STATES.INITIAL_STATE);
-
-    const loginPlayer = async (zloginMessage: postMessage.IInitalizeIframe) => {
-        const waitForChallenges = async () => {
-            const gameMessage = await globalIo.challengeReceiverP();
-            if (gameMessage.target !== loginMessage.id) {
-                return;
-            }
-            const isAccepted = await askAcceptChallenge(gameMessage);
-
-            globalIo.challengeReponseSender({
-                isAccepted,
-                target: gameMessage.source,
-            });
-
-            if (isAccepted) {
-                const channel = pubSub.connect(loginMessage.id, gameMessage.source);
-                const channelIo = nioPrep.init(channel);
-
-                window.setTimeout(() => {
-                    swal("Sent ready message");
-                    channelIo.readySender({ status: true });
-                }, 1 * 1000);
-
-                const gameData = battleShip.initGame(gameMessage.startGameData, channel, loginMessage.id);
-                battleShip.randomizeShips(gameData);
-                dataStore.save(loginMessage.id, gameData);
-                gameStatus.isPlaying = true;
-                renderGame(gameData, gameStatus);
-            } else {
-                waitForChallenges();
-            }
-        };
-        waitForChallenges();
-        renderGame(null, gameStatus);
-    };
 
     const userInfo = JSON.stringify(
         {
