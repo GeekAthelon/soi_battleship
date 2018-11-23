@@ -50,6 +50,7 @@ const messageHander = (e: MessageEvent) => {
 };
 
 export interface IGameStatus {
+    acceptChallenge?: IGameMessageChallenge;
     isPlaying: boolean;
     opponent: IPlayerInfo;
     state: STATES;
@@ -108,6 +109,34 @@ async function mainInit(loginMessage: postMessage.IInitalizeIframe) {
         setState(STATES.WAITING_CHALLENGE_RESPONSE);
     };
 
+    const acceptChallenge = async () => {
+        if (!gameStatus.acceptChallenge) {
+            return;
+        }
+        const isAccepted = await askAcceptChallenge(gameStatus.acceptChallenge);
+
+        globalIo.challengeReponseSender({
+            isAccepted,
+            target: gameStatus.acceptChallenge.source,
+        });
+
+        if (isAccepted) {
+            const channel = pubSub.connect(loginMessage.id, gameStatus.acceptChallenge.source);
+            const channelIo = nioPrep.init(channel);
+
+            // window.setTimeout(() => {
+            //     swal("Sent ready message");
+            //     channelIo.readySender({ status: true });
+            // }, 1 * 1000);
+
+            const gameData = battleShip.initGame(gameStatus.acceptChallenge.startGameData, channel, loginMessage.id);
+            battleShip.randomizeShips(gameData);
+            dataStore.save(loginMessage.id, gameData);
+            gameStatus.isPlaying = true;
+            renderGame(gameData, gameStatus);
+        }
+    };
+
     const waitingChallengeResponse = async () => {
         const gameMessage = await globalIo.challengeReponseReceiverP();
         if (gameMessage.target !== loginMessage.id) {
@@ -150,7 +179,7 @@ async function mainInit(loginMessage: postMessage.IInitalizeIframe) {
                 waitingChallengeResponse();
                 break;
             case STATES.ACCEPT_CHALLENGE:
-                alert("Accepting");
+                acceptChallenge();
                 break;
         }
     };
@@ -238,6 +267,7 @@ async function mainInit(loginMessage: postMessage.IInitalizeIframe) {
         }
 
         addChallenge({ id: gameMessage.source, name: gameMessage.name }, () => {
+            gameStatus.acceptChallenge = gameMessage;
             setState(STATES.ACCEPT_CHALLENGE);
         });
     };
