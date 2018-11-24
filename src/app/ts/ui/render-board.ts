@@ -191,22 +191,41 @@ function showHidePlayerList(gameStatus: IGameStatus) {
     [".js-playerlist", ".js-challengelist"].forEach((s) => display($(s), mode));
 }
 
-function setReadyStatus(gameData: IGameData | null, gameStatus: IGameStatus) {
+export function waitForPlayerReady(gameData: IGameData, gameStatus: IGameStatus) {
+    return new Promise<void>((resolve, reject) => {
+        const done = () => {
+            resolve();
+        };
+
+        setReadyStatus(gameData, gameStatus, done);
+    });
+}
+
+function setReadyStatus(
+    gameData: IGameData | null,
+    gameStatus: IGameStatus,
+    callback?: () => void) {
     const playerNotReadyElement = $(".js-player-not-ready");
-    const playerReadyElement = $(".js-player-is-ready");
     const opponentNotReady = $(".js-opponent-not-ready");
-    const opponentReadyElement = $(".js-opponent-is-ready");
 
     display(playerNotReadyElement, "none");
-    display(playerReadyElement, "none");
     display(opponentNotReady, "none");
-    display(opponentReadyElement, "none");
 
     if (!gameStatus.isPlaying) {
         return;
     }
     display(playerNotReadyElement, "");
     display(opponentNotReady, "");
+
+    if (callback) {
+        const readyButton = $(".js-ready-button");
+        const callDone = () => {
+            callback();
+            readyButton.removeEventListener("click", callDone);
+        };
+
+        readyButton.addEventListener("click", callDone);
+    }
 }
 
 export function renderGame(gameData: IGameData | null, gameStatus: IGameStatus) {
@@ -214,5 +233,4 @@ export function renderGame(gameData: IGameData | null, gameStatus: IGameStatus) 
         renderGrids(gameData);
     }
     showHidePlayerList(gameStatus);
-    setReadyStatus(gameData, gameStatus);
 }

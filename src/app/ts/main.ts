@@ -9,7 +9,7 @@ import * as battleShip from "./battleship";
 import { askAcceptChallenge } from "./ui/ask-accept-challenge";
 import { addChallenge, removeChallenge } from "./ui/challenge-list";
 import { addPlayer, IPlayerInfo, removePlayer } from "./ui/player-list";
-import { renderGame } from "./ui/render-board";
+import { renderGame, waitForPlayerReady } from "./ui/render-board";
 
 import "../style/ui.css";
 
@@ -20,6 +20,7 @@ enum STATES {
     WAITING_CHALLENGE_RESPONSE,
     ACCEPT_CHALLENGE,
     WAITING_FOR_READY,
+    WAITING_PLAY,
 }
 
 const tryParse = (s: string) => {
@@ -55,8 +56,10 @@ export interface IGameStatus {
     isPlaying: boolean;
     opponent: IPlayerInfo;
     state: STATES;
+    opponentReady: boolean;
     playerId: string;
     playerName: string;
+    playerReady: boolean;
 }
 
 async function mainInit(loginMessage: postMessage.IInitalizeIframe) {
@@ -66,8 +69,10 @@ async function mainInit(loginMessage: postMessage.IInitalizeIframe) {
             id: "",
             name: "",
         },
+        opponentReady: false,
         playerId: "",
         playerName: "",
+        playerReady: false,
         state: STATES.INITIAL_STATE,
     };
     const db = await initFirebase();
@@ -101,7 +106,7 @@ async function mainInit(loginMessage: postMessage.IInitalizeIframe) {
             ],
         };
 
-        globalIo.challengeSender({
+        globalIo.sendChallenge({
             name: loginMessage.name,
             source: loginMessage.id,
             startGameData,
@@ -116,7 +121,7 @@ async function mainInit(loginMessage: postMessage.IInitalizeIframe) {
         }
         const isAccepted = await askAcceptChallenge(gameStatus.acceptChallenge);
 
-        globalIo.challengeReponseSender({
+        globalIo.sendChallengeResponse({
             gameStartData: gameStatus.acceptChallenge.startGameData,
             isAccepted,
             target: gameStatus.acceptChallenge.source,
@@ -136,7 +141,7 @@ async function mainInit(loginMessage: postMessage.IInitalizeIframe) {
     };
 
     const waitingChallengeResponse = async () => {
-        const gameMessage = await globalIo.challengeReponseReceiverP();
+        const gameMessage = await globalIo.recieveChallengeResponse();
         if (gameMessage.target !== loginMessage.id) {
             return;
         }
@@ -159,6 +164,27 @@ async function mainInit(loginMessage: postMessage.IInitalizeIframe) {
 
         renderGame(gameData, gameStatus);
         setState(STATES.WAITING_FOR_READY);
+    };
+
+    const waitForBothPlayersReady = async () => {
+        const gameData = await dataStore.load(loginMessage.id);
+
+        const playerReadyP = (() => {
+            return new Promise((resolve, reject) => {
+                waitForPlayerReady(gameData, gameStatus).then(() => {
+                    globalIo.sendPlayerReady({ status: true });
+                    resolve();
+                });
+
+            });
+        })();
+
+        const opponentReadyP = globalIo.recievePlayerReady();
+
+        const k = await opponentReadyP;
+        swal("ready " + JSON.stringify(k));
+        await playerReadyP;
+        setState(STATES.WAITING_PLAY);
     };
 
     const setState = (state: STATES) => {
@@ -190,6 +216,11 @@ async function mainInit(loginMessage: postMessage.IInitalizeIframe) {
                 break;
             case STATES.ACCEPT_CHALLENGE:
                 acceptChallenge();
+                break;
+            case STATES.WAITING_FOR_READY:
+                waitForBothPlayersReady();
+                break;
+            case STATES.WAITING_PLAY:
                 break;
         }
     };
@@ -235,7 +266,7 @@ async function mainInit(loginMessage: postMessage.IInitalizeIframe) {
     });
 
     const buildAcceptChallengeQueue = async () => {
-        const gameMessage = await globalIo.challengeReceiverP();
+        const gameMessage = await globalIo.recieveChallenge();
         buildAcceptChallengeQueue();
         if (gameMessage.target !== loginMessage.id) {
             return;

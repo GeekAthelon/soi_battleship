@@ -332,9 +332,9 @@ describe("Main BattleShip Engine", function() {
                         const x = -1;
                         const y = -2;
 
-                        nio1.attackSender({ x, y });
+                        nio1.sendAttack({ x, y });
 
-                        const msg = await nio1.attackResponseP();
+                        const msg = await nio1.recieveAttackReponse();
 
                         assert.strictEqual(false, msg.isSuccess);
                         assert.strictEqual(gameData1.id, msg.playerTurn);
@@ -384,9 +384,9 @@ describe("Main BattleShip Engine", function() {
                             isDone("2");
                         });
 
-                        nio1.attackSender({ x, y });
+                        nio1.sendAttack({ x, y });
 
-                        const msg = await nio1.attackResponseP();
+                        const msg = await nio1.recieveAttackReponse();
                         assert.strictEqual(true, msg.isSuccess, "isSuccess");
                         assert.strictEqual(false, msg.isHit, "isHit");
                         assert.strictEqual(false, msg.isSink, "isSink");
@@ -445,9 +445,9 @@ describe("Main BattleShip Engine", function() {
                             isDone("2");
                         });
 
-                        nio1.attackSender({ x, y });
+                        nio1.sendAttack({ x, y });
 
-                        const msg = await nio1.attackResponseP();
+                        const msg = await nio1.recieveAttackReponse();
                         assert.strictEqual(true, msg.isSuccess, "isSuccess");
                         assert.strictEqual(true, msg.isHit, "isHit");
                         assert.strictEqual(false, msg.isSink, "isSink");
@@ -504,9 +504,9 @@ describe("Main BattleShip Engine", function() {
                             isDone("2");
                         });
 
-                        nio1.attackSender({ x, y });
+                        nio1.sendAttack({ x, y });
 
-                        const msg = await nio1.attackResponseP();
+                        const msg = await nio1.recieveAttackReponse();
                         assert.strictEqual(true, msg.isSuccess, "isSuccess");
                         assert.strictEqual(true, msg.isHit, "isHit");
                         assert.strictEqual(true, msg.isSink, "isSink");

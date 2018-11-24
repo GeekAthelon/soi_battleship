@@ -179,7 +179,7 @@ export function initGame(startGameData: IStartGameData, networkChannel: INetwork
     const opponent = gameData.startGameData.playerList.filter((p) => p.id !== playerID)[0];
 
     const attackResponseLoop = async () => {
-        const gameMessage = await nio.attackResponseReceiverP();
+        const gameMessage = await nio.recieveAttackReponse();
 
         const currentGameData = await dataStore.load(playerID);
         processAttackResponse(currentGameData, gameMessage);
@@ -191,11 +191,11 @@ export function initGame(startGameData: IStartGameData, networkChannel: INetwork
     attackResponseLoop();
 
     const attackReceiverLoop = async () => {
-        const gameMessage = await nio.attackReceiverP();
+        const gameMessage = await nio.recieveAttack();
         const currentGameData = await dataStore.load(playerID);
         const responseMessage = await processAttack(currentGameData, gameMessage, player, opponent);
 
-        nio.attackReplySender(responseMessage);
+        nio.sendAttackResponse(responseMessage);
 
         await dataStore.save(playerID, currentGameData);
         sendUpdateUI(currentGameData, gameMessage, player, opponent);

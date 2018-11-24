@@ -1,0 +1,3 @@
+interface IGameMessagePlayerReady {
+    status: true;
+}

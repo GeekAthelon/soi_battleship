@@ -8,17 +8,17 @@ const EventNames = {
 };
 
 export interface Inio {
-    attackReceiverP: () => Promise<IGameMessageAttack>;
-    attackReplySender: (arg: IGameMessageAttackResponse) => void;
-    attackResponseP: () => Promise<IGameMessageAttackResponse>;
-    attackResponseReceiverP: () => Promise<IGameMessageAttackResponse>;
-    attackSender: (arg: IGameMessageAttack) => void;
-    challengeReceiverP: () => Promise<IGameMessageChallenge>;
-    challengeReponseReceiverP: () => Promise<IGamemessageChallengeResponse>;
-    challengeReponseSender: (arg: IGamemessageChallengeResponse) => void;
-    challengeSender: (arg: IGameMessageChallenge) => void;
-    readySender: (arg: IGameMessageReady) => void;
-    readyReceiver: () => Promise<IGameMessageReady>;
+    recieveAttack: () => Promise<IGameMessageAttack>;
+    recieveAttackReponse: () => Promise<IGameMessageAttackResponse>;
+    recieveChallengeResponse: () => Promise<IGamemessageChallengeResponse>;
+    recieveChallenge: () => Promise<IGameMessageChallenge>;
+    recievePlayerReady: () => Promise<IGameMessagePlayerReady>;
+
+    sendAttackResponse: (arg: IGameMessageAttackResponse) => void;
+    sendAttack: (arg: IGameMessageAttack) => void;
+    sendChallengeResponse: (arg: IGamemessageChallengeResponse) => void;
+    sendChallenge: (arg: IGameMessageChallenge) => void;
+    sendPlayerReady: (arg: IGameMessagePlayerReady) => void;
 }
 
 export function init(channel: INetworkChannel): Inio {
@@ -31,27 +31,26 @@ export function init(channel: INetworkChannel): Inio {
     };
 
     return {
-        attackReceiverP:
+        recieveAttack:
             () => promisify<IGameMessageAttack>(EventNames.attack),
-        attackReplySender:
-            channel.makeSender<IGameMessageAttackResponse>(EventNames.attackResponse),
-        attackResponseP:
+        recieveAttackReponse:
             () => promisify<IGameMessageAttackResponse>(EventNames.attackResponse),
-        attackResponseReceiverP:
-            () => promisify<IGameMessageAttackResponse>(EventNames.attackResponse),
-        attackSender:
-            channel.makeSender<IGameMessageAttack>(EventNames.attack),
-        challengeReceiverP:
+        recieveChallenge:
             () => promisify<IGameMessageChallenge>(EventNames.challenge),
-        challengeReponseReceiverP:
+        recieveChallengeResponse:
             () => promisify<IGamemessageChallengeResponse>(EventNames.challengeResponse),
-        challengeReponseSender:
-            channel.makeSender<IGamemessageChallengeResponse>(EventNames.challengeResponse),
-        challengeSender:
+        recievePlayerReady:
+            () => promisify<IGameMessagePlayerReady>(EventNames.ready),
+
+        sendAttack:
+            channel.makeSender<IGameMessageAttack>(EventNames.attack),
+        sendAttackResponse:
+            channel.makeSender<IGameMessageAttackResponse>(EventNames.attackResponse),
+        sendChallenge:
             channel.makeSender<IGameMessageChallenge>(EventNames.challenge),
-        readyReceiver:
-            () => promisify<IGameMessageReady>(EventNames.ready),
-        readySender:
-            channel.makeSender<IGameMessageReady>(EventNames.ready),
+        sendChallengeResponse:
+            channel.makeSender<IGamemessageChallengeResponse>(EventNames.challengeResponse),
+        sendPlayerReady:
+            channel.makeSender<IGameMessagePlayerReady>(EventNames.ready),
     };
 }
