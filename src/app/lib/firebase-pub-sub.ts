@@ -72,14 +72,15 @@ export function init(db: firebase.database.Database): INetworkPubSub {
                 const key = makeKeyName2(receiverPrefix, name, flag);
                 const funcs = registry[key];
                 if (!funcs) { return; }
-                const cb = funcs.pop();
-                if (!cb) { return; }
+                funcs.forEach((cb) => {
+                    setTimeout(() => {
+                        cb.call(null, arg);
+                    });
 
-                if (flag) {
-                    removeSub(key, cb);
-                }
-
-                cb.call(null, arg);
+                    if (flag) {
+                        removeSub(key, cb);
+                    }
+                });
             });
         };
 
