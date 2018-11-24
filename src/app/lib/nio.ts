@@ -4,7 +4,7 @@ const EventNames = {
     challenge: "challenge",
     challengeResponse: "challenge-response",
     ping: "ping",
-    ready: "ready",
+    playerReady: "player-ready",
 };
 
 export interface Inio {
@@ -30,6 +30,10 @@ export function init(channel: INetworkChannel): Inio {
         });
     };
 
+    const doSend = <T>(name: string, arg: T) => [
+        channel.makeSender<T>(name)(arg),
+    ];
+
     return {
         recieveAttack:
             () => promisify<IGameMessageAttack>(EventNames.attack),
@@ -40,17 +44,16 @@ export function init(channel: INetworkChannel): Inio {
         recieveChallengeResponse:
             () => promisify<IGamemessageChallengeResponse>(EventNames.challengeResponse),
         recievePlayerReady:
-            () => promisify<IGameMessagePlayerReady>(EventNames.ready),
-
+            () => promisify<IGameMessagePlayerReady>(EventNames.playerReady),
         sendAttack:
-            channel.makeSender<IGameMessageAttack>(EventNames.attack),
+            (arg: IGameMessageAttack) => doSend(EventNames.attack, arg),
         sendAttackResponse:
-            channel.makeSender<IGameMessageAttackResponse>(EventNames.attackResponse),
+            (arg: IGameMessageAttackResponse) => doSend(EventNames.attackResponse, arg),
         sendChallenge:
-            channel.makeSender<IGameMessageChallenge>(EventNames.challenge),
+            (arg: IGameMessageChallenge) => doSend(EventNames.challenge, arg),
         sendChallengeResponse:
-            channel.makeSender<IGamemessageChallengeResponse>(EventNames.challengeResponse),
+            (arg: IGamemessageChallengeResponse) => doSend(EventNames.challengeResponse, arg),
         sendPlayerReady:
-            channel.makeSender<IGameMessagePlayerReady>(EventNames.ready),
+            (arg: IGameMessagePlayerReady) => doSend(EventNames.playerReady, arg),
     };
 }

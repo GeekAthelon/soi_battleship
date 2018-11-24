@@ -1,3 +1,3 @@
 interface IGameMessagePlayerReady {
-    status: true;
+    id: string;
 }

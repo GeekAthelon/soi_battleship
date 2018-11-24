@@ -42,10 +42,8 @@ export function init(db: firebase.database.Database): INetworkPubSub {
 
     function connect(source: string, target: string): INetworkChannel {
         const enableLogging = false;
-        const senderPrefix = `${source}:${target}:`;
-        const receiverPrefix = `${target}:${source}:`;
 
-        const makeKeyName2 = (id: string, name: string, once: boolean) => `T:${id}:${name}:${!!once}`;
+        const makeKeyName2 = (name: string, once: boolean) => `${name}:${!!once}`;
 
         const makeReceiver = <T extends {}>(name: string) => {
             return makeReceiver2<T>(name, false);
@@ -67,9 +65,17 @@ export function init(db: firebase.database.Database): INetworkPubSub {
             };
         };
 
-        const republishT = <T extends {}>(name: string, arg: T) => {
+        const validtargets = ["*", target];
+        const republishT = <T extends {}>(name: string, snapval: IFirebasePush, arg: T) => {
+            // if (validtargets.indexOf(snapval.target) === -1) {
+            //     return;
+            // }
+
+            console.log(`[republishT] source: ${source} target: ${target} name: ${name}`);
+            console.log(registry);
+
             [true, false].forEach((flag) => {
-                const key = makeKeyName2(receiverPrefix, name, flag);
+                const key = makeKeyName2(name, flag);
                 const funcs = registry[key];
                 if (!funcs) { return; }
                 funcs.forEach((cb) => {
@@ -85,7 +91,7 @@ export function init(db: firebase.database.Database): INetworkPubSub {
         };
 
         const subT = <T extends {}>(name: string, fn: INetworkPubSubSubscriptionT<T>, once?: boolean) => {
-            const key = makeKeyName2(receiverPrefix, name, !!once);
+            const key = makeKeyName2(name, !!once);
             if (enableLogging) { console.log("Subscribing to " + key); }
             if (!registry[key]) {
                 registry[key] = [fn];
@@ -103,6 +109,8 @@ export function init(db: firebase.database.Database): INetworkPubSub {
                 target,
                 timestamp: new Date().getTime() + offset,
             };
+            console.log(`[pubT] source: ${source} target: ${target} name: ${name}`);
+
             ref.push(item);
         };
 
@@ -110,9 +118,7 @@ export function init(db: firebase.database.Database): INetworkPubSub {
             ref.orderByChild("timestamp").startAt(Date.now() + offset).on("child_added", (snap) => {
                 if (snap && snap.key) {
                     const val = snap.val() as IFirebasePush;
-                    if (val.target === target) {
-                        republishT(val.name, val.arg);
-                    }
+                    republishT(val.name, val, val.arg);
                 }
             });
         });

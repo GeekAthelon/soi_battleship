@@ -135,6 +135,8 @@ async function mainInit(loginMessage: postMessage.IInitalizeIframe) {
             dataStore.save(loginMessage.id, gameData);
             gameStatus.isPlaying = true;
 
+            gameStatus.opponent.id = gameStatus.acceptChallenge!.source;
+
             renderGame(gameData, gameStatus);
             setState(STATES.WAITING_FOR_READY);
         }
@@ -166,25 +168,50 @@ async function mainInit(loginMessage: postMessage.IInitalizeIframe) {
         setState(STATES.WAITING_FOR_READY);
     };
 
+    const getPlayerIo = (gameData: IGameData) => {
+        const opponentId =
+            gameData.startGameData.playerList.filter((p) => p.id !== loginMessage.id)[0].id;
+
+        const playerChannel = pubSub.connect(loginMessage.id, opponentId);
+        const playerIo = nioPrep.init(playerChannel);
+        return playerIo;
+    };
+
     const waitForBothPlayersReady = async () => {
         const gameData = await dataStore.load(loginMessage.id);
+        const playerIo = getPlayerIo(gameData);
 
-        const playerReadyP = (() => {
-            return new Promise((resolve, reject) => {
-                waitForPlayerReady(gameData, gameStatus).then(() => {
-                    globalIo.sendPlayerReady({ status: true });
-                    resolve();
-                });
+        let playerCount = 0;
 
+        const areBothReady = () => {
+            if (playerCount === 2) {
+                alert("YES");
+                setState(STATES.WAITING_PLAY);
+            }
+        };
+
+        waitForPlayerReady(gameData, gameStatus).then(() => {
+            playerIo.sendPlayerReady({ id: loginMessage.id });
+            playerCount++;
+            areBothReady();
+        });
+
+        const waitForOtherGuy = () => {
+            playerIo.recievePlayerReady().then((v) => {
+                const opponentId =
+                    gameData.startGameData.playerList.filter((p) => p.id !== loginMessage.id)[0].id;
+
+                if (v.id === opponentId) {
+                    playerCount++;
+                    areBothReady();
+                } else {
+                    waitForOtherGuy();
+                }
             });
-        })();
 
-        const opponentReadyP = globalIo.recievePlayerReady();
+        };
+        waitForOtherGuy();
 
-        const k = await opponentReadyP;
-        swal("ready " + JSON.stringify(k));
-        await playerReadyP;
-        setState(STATES.WAITING_PLAY);
     };
 
     const setState = (state: STATES) => {
