@@ -214,7 +214,9 @@ export function setReadyStatus(
     if (!gameStatus.isPlaying) {
         return;
     }
-    display(playerNotReadyElement, "");
+    if (!gameStatus.playerReady) {
+        display(playerNotReadyElement, "");
+    }
 
     if (!gameStatus.opponentReady) {
         display(opponentNotReady, "");

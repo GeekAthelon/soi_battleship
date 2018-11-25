@@ -5,7 +5,7 @@
   "main": "dest/battleship.js",
   "scripts": {
     "2": "npm run webpack && http-server dist -o -c-1",
-    "build:css": "node-sass-chokidar src/ -o src/ && tcm src --camelCase",
+    "build:css": "node-sass-chokidar src/ -o src/ && tcm src --camelCase && true",
     "build:ts": "tsc --skipLibCheck --project .",
     "build": "npm run clean && npm run build:css && npm run build:ts",
     "clean": "rimraf dist build src/**/*.{js,js.map} src/app/style/*.{css,css.d.ts}",
@@ -17,7 +17,7 @@
     "test:browser2": "npm run build && webpack --mode=development --config webpack-test-browser.config.js",
     "test:node2": "npm run build && webpack --mode=development --config webpack-test-node.config.js",
     "testbundle": "mocha dist/test-bundle-node.js",
-    "lint": "tslint --project . && tsfmt --verify",
+    "lint": "tsfmt --verify && tslint --project .",
     "lint:fix": "tslint --project . --fix && tsfmt -r",
     "validate": "npm-run-all --parallel test:node lint",
     "precommit": "npm run validate",

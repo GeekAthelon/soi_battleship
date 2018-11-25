@@ -181,24 +181,20 @@ async function mainInit(loginMessage: postMessage.IInitalizeIframe) {
         const gameData = await dataStore.load(loginMessage.id);
         const playerIo = getPlayerIo(gameData);
 
-        let playerCount = 0;
-
         const areBothReady = () => {
-            if (playerCount === 2) {
+            setReadyStatus(gameData, gameStatus);
+            if (gameStatus.playerReady && gameStatus.opponentReady) {
                 setState(STATES.WAITING_PLAY);
             }
         };
 
         waitForPlayerReady(gameData, gameStatus).then(() => {
+            gameStatus.playerReady = true;
             playerIo.sendPlayerReady({ id: loginMessage.id });
-            playerCount++;
             areBothReady();
         });
         playerIo.recievePlayerReady().then((v) => {
             gameStatus.opponentReady = true;
-            setReadyStatus(gameData, gameStatus);
-
-            playerCount++;
             areBothReady();
         });
 
