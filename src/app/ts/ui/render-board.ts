@@ -201,7 +201,7 @@ export function waitForPlayerReady(gameData: IGameData, gameStatus: IGameStatus)
     });
 }
 
-function setReadyStatus(
+export function setReadyStatus(
     gameData: IGameData | null,
     gameStatus: IGameStatus,
     callback?: () => void) {
@@ -215,7 +215,10 @@ function setReadyStatus(
         return;
     }
     display(playerNotReadyElement, "");
-    display(opponentNotReady, "");
+
+    if (!gameStatus.opponentReady) {
+        display(opponentNotReady, "");
+    }
 
     if (callback) {
         const readyButton = $(".js-ready-button");

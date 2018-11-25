@@ -9,7 +9,7 @@ import * as battleShip from "./battleship";
 import { askAcceptChallenge } from "./ui/ask-accept-challenge";
 import { addChallenge, removeChallenge } from "./ui/challenge-list";
 import { addPlayer, IPlayerInfo, removePlayer } from "./ui/player-list";
-import { renderGame, waitForPlayerReady } from "./ui/render-board";
+import { renderGame, setReadyStatus, waitForPlayerReady } from "./ui/render-board";
 
 import "../style/ui.css";
 
@@ -185,7 +185,6 @@ async function mainInit(loginMessage: postMessage.IInitalizeIframe) {
 
         const areBothReady = () => {
             if (playerCount === 2) {
-                alert("YES");
                 setState(STATES.WAITING_PLAY);
             }
         };
@@ -195,22 +194,13 @@ async function mainInit(loginMessage: postMessage.IInitalizeIframe) {
             playerCount++;
             areBothReady();
         });
+        playerIo.recievePlayerReady().then((v) => {
+            gameStatus.opponentReady = true;
+            setReadyStatus(gameData, gameStatus);
 
-        const waitForOtherGuy = () => {
-            playerIo.recievePlayerReady().then((v) => {
-                const opponentId =
-                    gameData.startGameData.playerList.filter((p) => p.id !== loginMessage.id)[0].id;
-
-                if (v.id === opponentId) {
-                    playerCount++;
-                    areBothReady();
-                } else {
-                    waitForOtherGuy();
-                }
-            });
-
-        };
-        waitForOtherGuy();
+            playerCount++;
+            areBothReady();
+        });
 
     };
 

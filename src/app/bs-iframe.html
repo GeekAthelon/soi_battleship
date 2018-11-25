@@ -6,9 +6,24 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta http-equiv="X-UA-Compatible" content="ie=edge">
     <title></title>
+
+    <style>
+        .js-log {
+            background-color: black;
+            color: yellow;
+            border: 2px solid white;
+            position:absolute;
+            bottom: 0;
+            left: 0;
+            height: 10em;
+            width: 100%;
+            overflow:auto;
+    }
+    </style>
 </head>
 
 <body>
+    <div class="js-status"></div>
     <ul class="js-playerlist"></ul>
     <ul class="js-challengelist"></ul>
 
@@ -25,8 +40,9 @@
     <p class="js-opponent-not-ready" style="display:none">
         Waiting on opponent
     </p>
-   
-    <div class="js-status"></div>
+
+    <div class="js-log"></div>
+
 </body>
 
 </html>

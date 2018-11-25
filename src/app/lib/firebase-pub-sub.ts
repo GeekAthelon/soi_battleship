@@ -13,6 +13,14 @@ interface IFirebasePush {
     timestamp: number;
 }
 
+function log(s: string) {
+    const e = document.querySelector(".js-log") as HTMLElement;
+    const t = document.createElement("div");
+    t.innerHTML = s;
+    e.appendChild(t);
+
+    t.scrollIntoView(false);
+}
 export function init(db: firebase.database.Database): INetworkPubSub {
     const registry: IDictionary = {};
     let uniqueTriggerValue = 0;
@@ -65,14 +73,16 @@ export function init(db: firebase.database.Database): INetworkPubSub {
             };
         };
 
-        const validtargets = ["*", target];
+        const invalidTargets = [
+            "*", // Wed don't want our own
+            source, // messages
+        ];
         const republishT = <T extends {}>(name: string, snapval: IFirebasePush, arg: T) => {
-            // if (validtargets.indexOf(snapval.target) === -1) {
-            //     return;
-            // }
+            const ignoreMsg = !(invalidTargets.indexOf(snapval.source) === -1);
 
-            console.log(`[republishT] source: ${source} target: ${target} name: ${name}`);
-            console.log(registry);
+            if (ignoreMsg) {
+                return;
+            }
 
             [true, false].forEach((flag) => {
                 const key = makeKeyName2(name, flag);
@@ -80,6 +90,10 @@ export function init(db: firebase.database.Database): INetworkPubSub {
                 if (!funcs) { return; }
                 funcs.forEach((cb) => {
                     setTimeout(() => {
+                        log(`ignorMsg: ${ignoreMsg} ` +
+                            JSON.stringify(invalidTargets) +
+                            ` [republishT] source: ${source} target: ${target} name: ${name}`,
+                        );
                         cb.call(null, arg);
                     });
 

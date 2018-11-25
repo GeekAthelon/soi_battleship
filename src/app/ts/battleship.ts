@@ -178,30 +178,30 @@ export function initGame(startGameData: IStartGameData, networkChannel: INetwork
     const player = gameData.startGameData.playerList.filter((p) => p.id === playerID)[0];
     const opponent = gameData.startGameData.playerList.filter((p) => p.id !== playerID)[0];
 
-    const attackResponseLoop = async () => {
-        const gameMessage = await nio.recieveAttackReponse();
+    // const attackResponseLoop = async () => {
+    //     const gameMessage = await nio.recieveAttackReponse();
 
-        const currentGameData = await dataStore.load(playerID);
-        processAttackResponse(currentGameData, gameMessage);
+    //     const currentGameData = await dataStore.load(playerID);
+    //     processAttackResponse(currentGameData, gameMessage);
 
-        sendUpdateUI(currentGameData, gameMessage, player, opponent);
-        await dataStore.save(playerID, currentGameData);
-        attackResponseLoop();
-    };
-    attackResponseLoop();
+    //     sendUpdateUI(currentGameData, gameMessage, player, opponent);
+    //     await dataStore.save(playerID, currentGameData);
+    //     attackResponseLoop();
+    // };
+    // attackResponseLoop();
 
-    const attackReceiverLoop = async () => {
-        const gameMessage = await nio.recieveAttack();
-        const currentGameData = await dataStore.load(playerID);
-        const responseMessage = await processAttack(currentGameData, gameMessage, player, opponent);
+    // const attackReceiverLoop = async () => {
+    //     const gameMessage = await nio.recieveAttack();
+    //     const currentGameData = await dataStore.load(playerID);
+    //     const responseMessage = await processAttack(currentGameData, gameMessage, player, opponent);
 
-        nio.sendAttackResponse(responseMessage);
+    //     nio.sendAttackResponse(responseMessage);
 
-        await dataStore.save(playerID, currentGameData);
-        sendUpdateUI(currentGameData, gameMessage, player, opponent);
-        attackReceiverLoop();
-    };
-    attackReceiverLoop();
+    //     await dataStore.save(playerID, currentGameData);
+    //     sendUpdateUI(currentGameData, gameMessage, player, opponent);
+    //     attackReceiverLoop();
+    // };
+    // attackReceiverLoop();
 
     return gameData;
 }
