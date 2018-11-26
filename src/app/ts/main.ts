@@ -13,7 +13,7 @@ import { renderGame, setReadyStatus, waitForPlayerReady } from "./ui/render-boar
 
 import "../style/ui.css";
 
-enum STATES {
+enum STATE {
     INITIAL_STATE,
     WAITING,
     ISSUE_CHALLENGE,
@@ -55,7 +55,7 @@ export interface IGameStatus {
     acceptChallenge?: IGameMessageChallenge;
     isPlaying: boolean;
     opponent: IPlayerInfo;
-    state: STATES;
+    state: STATE;
     opponentReady: boolean;
     playerId: string;
     playerName: string;
@@ -73,7 +73,7 @@ async function mainInit(loginMessage: postMessage.IInitalizeIframe) {
         playerId: "",
         playerName: "",
         playerReady: false,
-        state: STATES.INITIAL_STATE,
+        state: STATE.INITIAL_STATE,
     };
     const db = await initFirebase();
 
@@ -112,7 +112,7 @@ async function mainInit(loginMessage: postMessage.IInitalizeIframe) {
             startGameData,
             target: opponent.id,
         });
-        setState(STATES.WAITING_CHALLENGE_RESPONSE);
+        setState(STATE.WAITING_CHALLENGE_RESPONSE);
     };
 
     const acceptChallenge = async () => {
@@ -138,7 +138,7 @@ async function mainInit(loginMessage: postMessage.IInitalizeIframe) {
             gameStatus.opponent.id = gameStatus.acceptChallenge!.source;
 
             renderGame(gameData, gameStatus);
-            setState(STATES.WAITING_FOR_READY);
+            setState(STATE.WAITING_FOR_READY);
         }
     };
 
@@ -150,7 +150,7 @@ async function mainInit(loginMessage: postMessage.IInitalizeIframe) {
 
         if (!gameMessage.isAccepted) {
             swal(`Your challenge was declined.`);
-            setState(STATES.WAITING);
+            setState(STATE.WAITING);
             return;
         }
 
@@ -165,7 +165,7 @@ async function mainInit(loginMessage: postMessage.IInitalizeIframe) {
         gameStatus.isPlaying = true;
 
         renderGame(gameData, gameStatus);
-        setState(STATES.WAITING_FOR_READY);
+        setState(STATE.WAITING_FOR_READY);
     };
 
     const getPlayerIo = (gameData: IGameData) => {
@@ -184,7 +184,7 @@ async function mainInit(loginMessage: postMessage.IInitalizeIframe) {
         const areBothReady = () => {
             setReadyStatus(gameData, gameStatus);
             if (gameStatus.playerReady && gameStatus.opponentReady) {
-                setState(STATES.WAITING_PLAY);
+                setState(STATE.WAITING_PLAY);
             }
         };
 
@@ -200,44 +200,44 @@ async function mainInit(loginMessage: postMessage.IInitalizeIframe) {
 
     };
 
-    const setState = (state: STATES) => {
+    const setState = (state: STATE) => {
         const statusEl = document.querySelector(".js-status") as HTMLElement;
-        statusEl.innerHTML = "State : " + STATES[state];
+        statusEl.innerHTML = "State : " + STATE[state];
         gameStatus.state = state;
         executeStateMachine();
     };
 
     const executeStateMachine = async () => {
         switch (gameStatus.state) {
-            case STATES.INITIAL_STATE:
+            case STATE.INITIAL_STATE:
                 if (loginMessage.id !== "") {
                     gameStatus.playerId = loginMessage.id;
                     gameStatus.playerName = loginMessage.name;
-                    gameStatus.state = STATES.WAITING;
+                    gameStatus.state = STATE.WAITING;
                     renderGame(null, gameStatus);
                 }
                 break;
-            case STATES.WAITING:
+            case STATE.WAITING:
                 // We are waiting for something to happen, either a challenge
                 // or a challenge response.
                 break;
-            case STATES.ISSUE_CHALLENGE:
+            case STATE.ISSUE_CHALLENGE:
                 challengeOpponent(gameStatus.opponent);
                 break;
-            case STATES.WAITING_CHALLENGE_RESPONSE:
+            case STATE.WAITING_CHALLENGE_RESPONSE:
                 waitingChallengeResponse();
                 break;
-            case STATES.ACCEPT_CHALLENGE:
+            case STATE.ACCEPT_CHALLENGE:
                 acceptChallenge();
                 break;
-            case STATES.WAITING_FOR_READY:
+            case STATE.WAITING_FOR_READY:
                 waitForBothPlayersReady();
                 break;
-            case STATES.WAITING_PLAY:
+            case STATE.WAITING_PLAY:
                 break;
         }
     };
-    setState(STATES.INITIAL_STATE);
+    setState(STATE.INITIAL_STATE);
 
     const userInfo = JSON.stringify(
         {
@@ -262,7 +262,7 @@ async function mainInit(loginMessage: postMessage.IInitalizeIframe) {
                     const r = { ...playerInfo };
                     r.callback = undefined;
                     gameStatus.opponent = r;
-                    setState(STATES.ISSUE_CHALLENGE);
+                    setState(STATE.ISSUE_CHALLENGE);
                 });
             }
         }
@@ -287,7 +287,7 @@ async function mainInit(loginMessage: postMessage.IInitalizeIframe) {
 
         addChallenge({ id: gameMessage.source, name: gameMessage.name }, () => {
             gameStatus.acceptChallenge = gameMessage;
-            setState(STATES.ACCEPT_CHALLENGE);
+            setState(STATE.ACCEPT_CHALLENGE);
         });
     };
     buildAcceptChallengeQueue();
