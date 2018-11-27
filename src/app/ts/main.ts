@@ -20,7 +20,9 @@ enum STATE {
     WAITING_CHALLENGE_RESPONSE,
     ACCEPT_CHALLENGE,
     WAITING_FOR_READY,
-    WAITING_PLAY,
+    TARGETTING,
+    TARGETTED,
+    TARGET_RESPOSE,
 }
 
 const tryParse = (s: string) => {
@@ -60,6 +62,7 @@ export interface IGameStatus {
     playerId: string;
     playerName: string;
     playerReady: boolean;
+    whoseturn: string;
 }
 
 async function mainInit(loginMessage: postMessage.IInitalizeIframe) {
@@ -74,6 +77,7 @@ async function mainInit(loginMessage: postMessage.IInitalizeIframe) {
         playerName: "",
         playerReady: false,
         state: STATE.INITIAL_STATE,
+        whoseturn: "",
     };
     const db = await initFirebase();
 
@@ -134,8 +138,8 @@ async function mainInit(loginMessage: postMessage.IInitalizeIframe) {
             battleShip.randomizeShips(gameData);
             dataStore.save(loginMessage.id, gameData);
             gameStatus.isPlaying = true;
-
             gameStatus.opponent.id = gameStatus.acceptChallenge!.source;
+            gameStatus.whoseturn = gameStatus.opponent.id;
 
             renderGame(gameData, gameStatus);
             setState(STATE.WAITING_FOR_READY);
@@ -163,6 +167,7 @@ async function mainInit(loginMessage: postMessage.IInitalizeIframe) {
         battleShip.randomizeShips(gameData);
         dataStore.save(loginMessage.id, gameData);
         gameStatus.isPlaying = true;
+        gameStatus.whoseturn = gameMessage.target;
 
         renderGame(gameData, gameStatus);
         setState(STATE.WAITING_FOR_READY);
@@ -184,7 +189,11 @@ async function mainInit(loginMessage: postMessage.IInitalizeIframe) {
         const areBothReady = () => {
             setReadyStatus(gameData, gameStatus);
             if (gameStatus.playerReady && gameStatus.opponentReady) {
-                setState(STATE.WAITING_PLAY);
+                if (gameStatus.whoseturn === loginMessage.id) {
+                    setState(STATE.TARGETTING);
+                } else {
+                    setState(STATE.TARGETTED);
+                }
             }
         };
 
@@ -233,7 +242,9 @@ async function mainInit(loginMessage: postMessage.IInitalizeIframe) {
             case STATE.WAITING_FOR_READY:
                 waitForBothPlayersReady();
                 break;
-            case STATE.WAITING_PLAY:
+            case STATE.TARGETTING:
+                break;
+            case STATE.TARGETTED:
                 break;
         }
     };
