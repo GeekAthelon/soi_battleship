@@ -194,6 +194,11 @@ async function mainInit(loginMessage: postMessage.IInitalizeIframe) {
         const attackResponse = await playerIo.recieveAttackReponse();
         await battleShip.processAttackResponse(gameData, attackResponse);
 
+        if (attackResponse.isSink) {
+            const shipName = gameData.startGameData.shipData[attackResponse.sunkShip!].name;
+            swal(`You've sunk a ${shipName}!`);
+        }
+
         if (attackResponse.isSuccess) {
             setState(STATE.TARGETTED);
             gameStatus.whoseturn = gameStatus.opponent.id;
@@ -229,6 +234,11 @@ async function mainInit(loginMessage: postMessage.IInitalizeIframe) {
         const attackResponse = await battleShip.processAttack(gameData, target);
         render.renderGrids(gameData, target, undefined);
         playerIo.sendAttackResponse(attackResponse);
+
+        if (attackResponse.isSink) {
+            const shipName = gameData.startGameData.shipData[attackResponse.sunkShip!].name;
+            swal(`Your ${shipName} has been sunk!`);
+        }
 
         await dataStore.save(loginMessage.id, gameData);
         if (attackResponse.isSuccess) {
