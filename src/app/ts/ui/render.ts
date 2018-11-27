@@ -153,12 +153,12 @@ const calculateGridData = (gameData: IGameData) => {
     return { height, width, gridSize };
 };
 
-function renderGrids(gameData: IGameData) {
+export function renderGrids(gameData: IGameData) {
     renderShipBoard(gameData, gameData.data.shipBoard);
     renderTargetBoard(gameData, gameData.data.targetBoard);
 }
 
-function showHidePlayerList(gameStatus: IGameStatus) {
+export function showHidePlayerList(gameStatus: IGameStatus) {
     const mode = gameStatus.isPlaying ? "none" : "";
     [".js-playerlist", ".js-challengelist"].forEach((s) => display($(s), mode));
 }
@@ -211,11 +211,4 @@ export function setReadyStatus(
 
         readyButton.addEventListener("click", callDone);
     }
-}
-
-export function renderGame(gameData: IGameData | null, gameStatus: IGameStatus) {
-    if (gameData) {
-        renderGrids(gameData);
-    }
-    showHidePlayerList(gameStatus);
 }

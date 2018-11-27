@@ -9,7 +9,7 @@ import * as battleShip from "./battleship";
 import { askAcceptChallenge } from "./ui/ask-accept-challenge";
 import { addChallenge, removeChallenge } from "./ui/challenge-list";
 import { addPlayer, IPlayerInfo, removePlayer } from "./ui/player-list";
-import { renderGame, setReadyStatus, setTargettingMessages, waitForPlayerReady } from "./ui/render-board";
+import * as render from "./ui/render";
 
 import "../style/ui.css";
 
@@ -141,7 +141,7 @@ async function mainInit(loginMessage: postMessage.IInitalizeIframe) {
             gameStatus.opponent.id = gameStatus.acceptChallenge!.source;
             gameStatus.whoseturn = gameStatus.opponent.id;
 
-            renderGame(gameData, gameStatus);
+            render.showHidePlayerList(gameStatus);
             setState(STATE.WAITING_FOR_READY);
         }
     };
@@ -169,7 +169,7 @@ async function mainInit(loginMessage: postMessage.IInitalizeIframe) {
         gameStatus.isPlaying = true;
         gameStatus.whoseturn = gameMessage.target;
 
-        renderGame(gameData, gameStatus);
+        render.showHidePlayerList(gameStatus);
         setState(STATE.WAITING_FOR_READY);
     };
 
@@ -185,13 +185,13 @@ async function mainInit(loginMessage: postMessage.IInitalizeIframe) {
     const waitForTargetting = async () => {
         const gameData = await dataStore.load(loginMessage.id);
         const playerIo = getPlayerIo(gameData);
-        setTargettingMessages(gameData, gameStatus);
+        render.setTargettingMessages(gameData, gameStatus);
     };
 
     const waitForIncoming = async () => {
         const gameData = await dataStore.load(loginMessage.id);
         const playerIo = getPlayerIo(gameData);
-        setTargettingMessages(gameData, gameStatus);
+        render.setTargettingMessages(gameData, gameStatus);
     };
 
     const waitForBothPlayersReady = async () => {
@@ -199,7 +199,7 @@ async function mainInit(loginMessage: postMessage.IInitalizeIframe) {
         const playerIo = getPlayerIo(gameData);
 
         const areBothReady = () => {
-            setReadyStatus(gameData, gameStatus);
+            render.setReadyStatus(gameData, gameStatus);
             if (gameStatus.playerReady && gameStatus.opponentReady) {
                 if (gameStatus.whoseturn === loginMessage.id) {
                     setState(STATE.TARGETTING);
@@ -209,7 +209,7 @@ async function mainInit(loginMessage: postMessage.IInitalizeIframe) {
             }
         };
 
-        waitForPlayerReady(gameData, gameStatus).then(() => {
+        render.waitForPlayerReady(gameData, gameStatus).then(() => {
             gameStatus.playerReady = true;
             playerIo.sendPlayerReady({ id: loginMessage.id });
             areBothReady();
@@ -219,6 +219,7 @@ async function mainInit(loginMessage: postMessage.IInitalizeIframe) {
             areBothReady();
         });
 
+        render.renderGrids(gameData);
     };
 
     const setState = (state: STATE) => {
@@ -235,7 +236,7 @@ async function mainInit(loginMessage: postMessage.IInitalizeIframe) {
                     gameStatus.playerId = loginMessage.id;
                     gameStatus.playerName = loginMessage.name;
                     gameStatus.state = STATE.WAITING;
-                    renderGame(null, gameStatus);
+                    render.showHidePlayerList(gameStatus);
                 }
                 break;
             case STATE.WAITING:
