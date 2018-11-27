@@ -101,8 +101,6 @@ async function processAttackResponse(gameData: IGameData, gameMessage: IGameMess
 export async function processAttack(
     gameData: IGameData,
     gameMessage: IGameMessageAttack,
-    player: IPlayerInfo,
-    opponent: IPlayerInfo,
 ) {
 
     const cell = gameData.data.shipBoard[gameMessage.x] && gameData.data.shipBoard[gameMessage.x][gameMessage.y];
@@ -111,7 +109,6 @@ export async function processAttack(
         isHit: false,
         isSink: false,
         isSuccess: false,
-        playerTurn: opponent.id,
         sunkShip: undefined,
         x: gameMessage.x,
         y: gameMessage.y,
@@ -120,7 +117,6 @@ export async function processAttack(
     if (cell < gameData.startGameData.shipData.length) {
         responseMessage.isSuccess = true;
         responseMessage.isHit = true;
-        responseMessage.playerTurn = player.id;
         gameData.data.shipStatus[cell].hitPoints--;
         responseMessage.isSink = gameData.data.shipStatus[cell].hitPoints === 0;
         responseMessage.sunkShip = responseMessage.isSink ? cell : undefined;
@@ -128,8 +124,6 @@ export async function processAttack(
         gameData.data.shipBoard[gameMessage.x][gameMessage.y] = BoardCellType.hit;
     } else if (cell === BoardCellType.water) {
         responseMessage.isSuccess = true;
-        responseMessage.playerTurn = player.id;
-
         gameData.data.shipBoard[gameMessage.x][gameMessage.y] = BoardCellType.miss;
     } else {
         // Either hit a targetted spot alreada

@@ -13,9 +13,6 @@ interface IGameMessageAttackResponse {
     // What ship was sunk?
     sunkShip: number | undefined;
 
-    // Whose turn?
-    playerTurn: string;
-
     // The coordinates of the attack
     x: number;
     y: number;

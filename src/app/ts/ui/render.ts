@@ -1,7 +1,7 @@
 import SVG from "svgjs";
 import { range } from "../../lib/range";
 import * as battleShip from "../battleship";
-import { IGameStatus, STATE } from "../main";
+import { IGameStatus, IPoint, STATE } from "../main";
 
 interface INodePrettyPrint {
     id: number;
@@ -40,9 +40,41 @@ function renderGrid(gameData: IGameData, board: number[][], gridSize: number, dr
             const r = draw.rect(gridSize, gridSize)
                 .stroke("white")
                 .move(px, py);
+        }
+    }
+}
+
+function renderTargetingOverlay(
+    gameData: IGameData,
+    board: number[][],
+    gridSize: number,
+    draw: SVG.Doc,
+    cb: (point: IPoint) => void,
+) {
+    for (const y of range(0, gameData.startGameData.boardHeight - 1)) {
+        for (const x of range(0, gameData.startGameData.boardWidth - 1)) {
+            const cell = board[x][y];
+            const fmt = nodePrettyPrint.filter((p) => p.id === cell)[0] || def;
+
+            const px = gridSize * x;
+            const py = gridSize * y;
+
+            const r = draw.rect(gridSize, gridSize)
+                .stroke("white")
+                .fill("#f03")
+                .opacity(0)
+                .move(px, py);
 
             r.on("mouseover", () => {
-                r.attr({ fill: "#f03" });
+                r.attr({ opacity: "1" });
+            });
+
+            r.on("mouseout", () => {
+                r.attr({ opacity: "0" });
+            });
+
+            r.on("click", () => {
+                cb({ x, y });
             });
 
         }
@@ -84,7 +116,13 @@ function renderShips(gameData: IGameData, board: number[][], gridSize: number, d
     });
 }
 
-function renderPegs(gameData: IGameData, board: number[][], gridSize: number, draw: SVG.Doc) {
+function renderPegs(
+    gameData: IGameData,
+    board: number[][],
+    gridSize: number,
+    draw: SVG.Doc,
+    lastPoint?: IPoint,
+) {
     for (const y of range(0, gameData.startGameData.boardHeight - 1)) {
         for (const x of range(0, gameData.startGameData.boardWidth - 1)) {
             const cell = board[x][y];
@@ -93,9 +131,26 @@ function renderPegs(gameData: IGameData, board: number[][], gridSize: number, dr
             const px = gridSize * x;
             const py = gridSize * y;
 
-            draw.circle(gridSize * .5)
-                .fill(fmt.color)
-                .center(px + (gridSize / 2), py + (gridSize / 2));
+            const drawCircle = (color: string) => {
+                return draw.circle(gridSize * .5)
+                    .fill(color)
+                    .center(px + (gridSize / 2), py + (gridSize / 2));
+            };
+
+            const blink = () => {
+                const c = drawCircle(fmt.color);
+
+                c.animate(200, ">", 100).attr({ fill: fmt.color }).after(() => {
+                    c.remove();
+                    setTimeout(blink, 100);
+                });
+            };
+
+            if (lastPoint && x === lastPoint.x && y === lastPoint.y) {
+                blink();
+            } else {
+                drawCircle(fmt.color);
+            }
         }
     }
 }
@@ -103,6 +158,7 @@ function renderPegs(gameData: IGameData, board: number[][], gridSize: number, dr
 function renderShipBoard(
     gameData: IGameData,
     board: number[][],
+    lastPoint?: IPoint,
 ) {
 
     const targetElement = document.querySelector(".js-ship-board") as HTMLElement;
@@ -115,12 +171,13 @@ function renderShipBoard(
 
     renderGrid(gameData, board, gridInfo.gridSize, draw);
     renderShips(gameData, board, gridInfo.gridSize, draw);
-    renderPegs(gameData, board, gridInfo.gridSize, draw);
+    renderPegs(gameData, board, gridInfo.gridSize, draw, lastPoint);
 }
 
 function renderTargetBoard(
     gameData: IGameData,
     board: number[][],
+    cb?: (p: IPoint) => void,
 ) {
     const targetElement = document.querySelector(".js-target-board") as HTMLElement;
     targetElement.innerHTML = "";
@@ -132,6 +189,9 @@ function renderTargetBoard(
 
     renderGrid(gameData, board, gridInfo.gridSize, draw);
     renderPegs(gameData, board, gridInfo.gridSize, draw);
+    if (cb) {
+        renderTargetingOverlay(gameData, board, gridInfo.gridSize, draw, cb);
+    }
 }
 
 const calculateGridData = (gameData: IGameData) => {
@@ -153,9 +213,13 @@ const calculateGridData = (gameData: IGameData) => {
     return { height, width, gridSize };
 };
 
-export function renderGrids(gameData: IGameData) {
-    renderShipBoard(gameData, gameData.data.shipBoard);
-    renderTargetBoard(gameData, gameData.data.targetBoard);
+export function renderGrids(
+    gameData: IGameData,
+    cb?: (p: IPoint) => void,
+    lastPoint?: IPoint,
+) {
+    renderShipBoard(gameData, gameData.data.shipBoard, lastPoint);
+    renderTargetBoard(gameData, gameData.data.targetBoard, cb);
 }
 
 export function showHidePlayerList(gameStatus: IGameStatus) {

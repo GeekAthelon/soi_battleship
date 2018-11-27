@@ -337,7 +337,6 @@ describe("Main BattleShip Engine", function() {
                         const msg = await nio1.recieveAttackReponse();
 
                         assert.strictEqual(false, msg.isSuccess);
-                        assert.strictEqual(gameData1.id, msg.playerTurn);
                         assert.strictEqual(x, msg.x);
                         assert.strictEqual(y, msg.y);
 
@@ -391,7 +390,6 @@ describe("Main BattleShip Engine", function() {
                         assert.strictEqual(false, msg.isHit, "isHit");
                         assert.strictEqual(false, msg.isSink, "isSink");
                         assert.strictEqual(undefined, msg.sunkShip, "sunkShip");
-                        assert.strictEqual(attackee.id, msg.playerTurn, "playerTurn");
                         assert.strictEqual(x, msg.x, "x");
                         assert.strictEqual(y, msg.y, "y");
 
@@ -452,7 +450,6 @@ describe("Main BattleShip Engine", function() {
                         assert.strictEqual(true, msg.isHit, "isHit");
                         assert.strictEqual(false, msg.isSink, "isSink");
                         assert.strictEqual(undefined, msg.sunkShip, "sunkShip");
-                        assert.strictEqual(attackee.id, msg.playerTurn, "playerTurn");
                         assert.strictEqual(x, msg.x, "x");
                         assert.strictEqual(y, msg.y, "y");
 
@@ -511,7 +508,6 @@ describe("Main BattleShip Engine", function() {
                         assert.strictEqual(true, msg.isHit, "isHit");
                         assert.strictEqual(true, msg.isSink, "isSink");
                         assert.strictEqual(5, msg.sunkShip, "sunkShip");
-                        assert.strictEqual(attackee.id, msg.playerTurn, "playerTurn");
                         assert.strictEqual(x, msg.x, "x");
                         assert.strictEqual(y, msg.y, "y");
 

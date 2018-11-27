@@ -65,6 +65,11 @@ export interface IGameStatus {
     whoseturn: string;
 }
 
+export interface IPoint {
+    x: number;
+    y: number;
+}
+
 async function mainInit(loginMessage: postMessage.IInitalizeIframe) {
     const gameStatus: IGameStatus = {
         isPlaying: false,
@@ -186,12 +191,24 @@ async function mainInit(loginMessage: postMessage.IInitalizeIframe) {
         const gameData = await dataStore.load(loginMessage.id);
         const playerIo = getPlayerIo(gameData);
         render.setTargettingMessages(gameData, gameStatus);
+        render.renderGrids(gameData, (p) => {
+            const point: IPoint = { x: p.x, y: p.y };
+            render.renderGrids(gameData, undefined);
+            playerIo.sendAttack(point);
+        });
     };
 
     const waitForIncoming = async () => {
         const gameData = await dataStore.load(loginMessage.id);
         const playerIo = getPlayerIo(gameData);
         render.setTargettingMessages(gameData, gameStatus);
+        render.renderGrids(gameData);
+
+        const target = await playerIo.recieveAttack();
+
+        const attackResponse = await battleShip.processAttack(gameData, target);
+        render.renderGrids(gameData, undefined, target);
+        playerIo.sendAttackResponse(attackResponse);
     };
 
     const waitForBothPlayersReady = async () => {
