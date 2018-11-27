@@ -37,12 +37,14 @@ function renderGrid(gameData: IGameData, board: number[][], gridSize: number, dr
             const px = gridSize * x;
             const py = gridSize * y;
 
-            draw.rect(gridSize, gridSize)
+            const r = draw.rect(gridSize, gridSize)
                 .stroke("white")
-                .move(px, py)
-                .click(() => {
-                    alert(`You clicked on the board at ${x},${y}`);
-                });
+                .move(px, py);
+
+            r.on("mouseover", () => {
+                r.attr({ fill: "#f03" });
+            });
+
         }
     }
 }
@@ -93,79 +95,46 @@ function renderPegs(gameData: IGameData, board: number[][], gridSize: number, dr
 
             draw.circle(gridSize * .5)
                 .fill(fmt.color)
-                .center(px + (gridSize / 2), py + (gridSize / 2))
-                .click(() => {
-                    alert("You clicked on a peg");
-                });
+                .center(px + (gridSize / 2), py + (gridSize / 2));
         }
     }
 }
 
 function renderShipBoard(
-    height: number,
-    width: number,
-    gridSize: number,
     gameData: IGameData,
     board: number[][],
-    targetElement: HTMLElement) {
+) {
 
-    const draw = SVG(targetElement).size(width, height);
-    draw.viewbox(0, 0, width, height);
+    const targetElement = document.querySelector(".js-ship-board") as HTMLElement;
+    targetElement.innerHTML = "";
 
-    renderGrid(gameData, board, gridSize, draw);
-    renderShips(gameData, board, gridSize, draw);
-    renderPegs(gameData, board, gridSize, draw);
+    const gridInfo = calculateGridData(gameData);
+
+    const draw = SVG(targetElement).size(gridInfo.width, gridInfo.height);
+    draw.viewbox(0, 0, gridInfo.width, gridInfo.height);
+
+    renderGrid(gameData, board, gridInfo.gridSize, draw);
+    renderShips(gameData, board, gridInfo.gridSize, draw);
+    renderPegs(gameData, board, gridInfo.gridSize, draw);
 }
 
 function renderTargetBoard(
-    height: number,
-    width: number,
-    gridSize: number,
     gameData: IGameData,
     board: number[][],
-    targetElement: HTMLElement) {
+) {
+    const targetElement = document.querySelector(".js-target-board") as HTMLElement;
+    targetElement.innerHTML = "";
 
-    const draw = SVG(targetElement).size(width, height);
-    draw.viewbox(0, 0, width, height);
+    const gridInfo = calculateGridData(gameData);
 
-    renderGrid(gameData, board, gridSize, draw);
-    renderPegs(gameData, board, gridSize, draw);
+    const draw = SVG(targetElement).size(gridInfo.width, gridInfo.height);
+    draw.viewbox(0, 0, gridInfo.width, gridInfo.height);
+
+    renderGrid(gameData, board, gridInfo.gridSize, draw);
+    renderPegs(gameData, board, gridInfo.gridSize, draw);
 }
 
-function renderGrids(gameData: IGameData) {
-    const targetElement = document.querySelector(".js-target-board") as HTMLElement;
-    const shipElemnet = document.querySelector(".js-ship-board") as HTMLElement;
-
-    targetElement.innerHTML = "";
-    shipElemnet.innerHTML = "";
-
-    (() => {
-        if (window.screen.width) {
-            const setViewport = {
-                // bigger ones, be sure to set width to the needed and likely hardcoded width
-                // of your site at large breakpoints
-                other: "width=1045,user-scalable=yes",
-                // smaller devices
-                phone: "width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no",
-                // current browser width
-                widthDevice: window.screen.width,
-                // your css breakpoint for mobile, etc. non-mobile first
-                widthMin: 560,
-                // add the tag based on above vars and environment
-                setMeta() {
-                    const params = (this.widthDevice <= this.widthMin) ? this.phone : this.other;
-                    const head = document.getElementsByTagName("head")[0];
-                    const viewport = document.createElement("meta");
-                    viewport.setAttribute("name", "viewport");
-                    viewport.setAttribute("content", params);
-                    head.appendChild(viewport);
-                },
-            };
-            // call it
-            setViewport.setMeta();
-        }
-    }).call(null);
-
+const calculateGridData = (gameData: IGameData) => {
     const w = Math.max(document.documentElement!.clientWidth, window.innerWidth || 0);
     const h = Math.max(document.documentElement!.clientHeight, window.innerHeight || 0);
 
@@ -181,9 +150,12 @@ function renderGrids(gameData: IGameData) {
     const t2 = Math.min(height, width);
 
     const gridSize = Math.floor(t2 / t1);
+    return { height, width, gridSize };
+};
 
-    renderShipBoard(height, width, gridSize, gameData, gameData.data.shipBoard, shipElemnet);
-    renderTargetBoard(height, width, gridSize, gameData, gameData.data.targetBoard, targetElement);
+function renderGrids(gameData: IGameData) {
+    renderShipBoard(gameData, gameData.data.shipBoard);
+    renderTargetBoard(gameData, gameData.data.targetBoard);
 }
 
 function showHidePlayerList(gameStatus: IGameStatus) {
