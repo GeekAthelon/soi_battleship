@@ -1,7 +1,7 @@
 import SVG from "svgjs";
 import { range } from "../../lib/range";
 import * as battleShip from "../battleship";
-import { IGameStatus } from "../main";
+import { IGameStatus, STATE } from "../main";
 
 interface INodePrettyPrint {
     id: number;
@@ -41,7 +41,7 @@ function renderGrid(gameData: IGameData, board: number[][], gridSize: number, dr
                 .stroke("white")
                 .move(px, py)
                 .click(() => {
-                    alert("You clicked on the board");
+                    alert(`You clicked on the board at ${x},${y}`);
                 });
         }
     }
@@ -189,6 +189,14 @@ function renderGrids(gameData: IGameData) {
 function showHidePlayerList(gameStatus: IGameStatus) {
     const mode = gameStatus.isPlaying ? "none" : "";
     [".js-playerlist", ".js-challengelist"].forEach((s) => display($(s), mode));
+}
+
+export function setTargettingMessages(gameData: IGameData, gameStatus: IGameStatus) {
+    const targetting = $(".js-targetting");
+    const targetted = $(".js-targetted");
+
+    display(targetted, gameStatus.state === STATE.TARGETTED ? "" : "none");
+    display(targetting, gameStatus.state === STATE.TARGETTING ? "" : "none");
 }
 
 export function waitForPlayerReady(gameData: IGameData, gameStatus: IGameStatus) {
