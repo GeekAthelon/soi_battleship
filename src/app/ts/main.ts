@@ -22,7 +22,7 @@ export enum STATE {
     WAITING_FOR_READY,
     TARGETTING,
     TARGETTED,
-    TARGET_RESPOSE,
+    WAITING_TARGET_RESPONSE,
 }
 
 const tryParse = (s: string) => {
@@ -56,6 +56,7 @@ const messageHander = (e: MessageEvent) => {
 export interface IGameStatus {
     acceptChallenge?: IGameMessageChallenge;
     isPlaying: boolean;
+    lastPoint?: IPoint;
     opponent: IPlayerInfo;
     state: STATE;
     opponentReady: boolean;
@@ -187,14 +188,32 @@ async function mainInit(loginMessage: postMessage.IInitalizeIframe) {
         return playerIo;
     };
 
+    const waitForAttackResponse = async () => {
+        const gameData = await dataStore.load(loginMessage.id);
+        const playerIo = getPlayerIo(gameData);
+        const attackResponse = await playerIo.recieveAttackReponse();
+        await battleShip.processAttackResponse(gameData, attackResponse);
+
+        if (attackResponse.isSuccess) {
+            setState(STATE.TARGETTED);
+            gameStatus.whoseturn = gameStatus.opponent.id;
+        } else {
+            setState(STATE.TARGETTING);
+            swal("Can't attack there.");
+        }
+    };
+
     const waitForTargetting = async () => {
         const gameData = await dataStore.load(loginMessage.id);
         const playerIo = getPlayerIo(gameData);
         render.setTargettingMessages(gameData, gameStatus);
-        render.renderGrids(gameData, (p) => {
-            const point: IPoint = { x: p.x, y: p.y };
-            render.renderGrids(gameData, undefined);
-            playerIo.sendAttack(point);
+
+        render.renderGrids(gameData, undefined, gameStatus.lastPoint, async (p) => {
+            gameStatus.lastPoint = { x: p.x, y: p.y };
+            render.renderGrids(gameData);
+            playerIo.sendAttack(gameStatus.lastPoint);
+            await dataStore.save(loginMessage.id, gameData);
+            setState(STATE.WAITING_TARGET_RESPONSE);
         });
     };
 
@@ -202,13 +221,22 @@ async function mainInit(loginMessage: postMessage.IInitalizeIframe) {
         const gameData = await dataStore.load(loginMessage.id);
         const playerIo = getPlayerIo(gameData);
         render.setTargettingMessages(gameData, gameStatus);
-        render.renderGrids(gameData);
+        render.renderGrids(gameData, gameStatus.lastPoint, undefined);
 
         const target = await playerIo.recieveAttack();
+        gameStatus.lastPoint = { x: target.x, y: target.y };
 
         const attackResponse = await battleShip.processAttack(gameData, target);
-        render.renderGrids(gameData, undefined, target);
+        render.renderGrids(gameData, target, undefined);
         playerIo.sendAttackResponse(attackResponse);
+
+        await dataStore.save(loginMessage.id, gameData);
+        if (attackResponse.isSuccess) {
+            setState(STATE.TARGETTING);
+            gameStatus.whoseturn = gameStatus.opponent.id;
+        } else {
+            setState(STATE.TARGETTED);
+        }
     };
 
     const waitForBothPlayersReady = async () => {
@@ -277,6 +305,9 @@ async function mainInit(loginMessage: postMessage.IInitalizeIframe) {
                 break;
             case STATE.TARGETTED:
                 waitForIncoming();
+                break;
+            case STATE.WAITING_TARGET_RESPONSE:
+                waitForAttackResponse();
                 break;
         }
     };

@@ -11,7 +11,7 @@ interface IGameMessageAttackResponse {
     isSink: boolean;
 
     // What ship was sunk?
-    sunkShip: number | undefined;
+    sunkShip?: number;
 
     // The coordinates of the attack
     x: number;

@@ -177,6 +177,7 @@ function renderShipBoard(
 function renderTargetBoard(
     gameData: IGameData,
     board: number[][],
+    lastPoint?: IPoint,
     cb?: (p: IPoint) => void,
 ) {
     const targetElement = document.querySelector(".js-target-board") as HTMLElement;
@@ -188,7 +189,7 @@ function renderTargetBoard(
     draw.viewbox(0, 0, gridInfo.width, gridInfo.height);
 
     renderGrid(gameData, board, gridInfo.gridSize, draw);
-    renderPegs(gameData, board, gridInfo.gridSize, draw);
+    renderPegs(gameData, board, gridInfo.gridSize, draw, lastPoint);
     if (cb) {
         renderTargetingOverlay(gameData, board, gridInfo.gridSize, draw, cb);
     }
@@ -215,11 +216,12 @@ const calculateGridData = (gameData: IGameData) => {
 
 export function renderGrids(
     gameData: IGameData,
+    lastPointAttacker?: IPoint,
+    lastPointAttackee?: IPoint,
     cb?: (p: IPoint) => void,
-    lastPoint?: IPoint,
 ) {
-    renderShipBoard(gameData, gameData.data.shipBoard, lastPoint);
-    renderTargetBoard(gameData, gameData.data.targetBoard, cb);
+    renderShipBoard(gameData, gameData.data.shipBoard, lastPointAttackee);
+    renderTargetBoard(gameData, gameData.data.targetBoard, lastPointAttacker, cb);
 }
 
 export function showHidePlayerList(gameStatus: IGameStatus) {

@@ -89,7 +89,7 @@ export function randomizeShips(gameData: IGameData) {
     });
 }
 
-async function processAttackResponse(gameData: IGameData, gameMessage: IGameMessageAttackResponse) {
+export async function processAttackResponse(gameData: IGameData, gameMessage: IGameMessageAttackResponse) {
     if (!gameMessage.isSuccess) {
         return;
     }
@@ -109,7 +109,6 @@ export async function processAttack(
         isHit: false,
         isSink: false,
         isSuccess: false,
-        sunkShip: undefined,
         x: gameMessage.x,
         y: gameMessage.y,
     };
@@ -119,7 +118,9 @@ export async function processAttack(
         responseMessage.isHit = true;
         gameData.data.shipStatus[cell].hitPoints--;
         responseMessage.isSink = gameData.data.shipStatus[cell].hitPoints === 0;
-        responseMessage.sunkShip = responseMessage.isSink ? cell : undefined;
+        if (responseMessage.isSink) {
+            responseMessage.sunkShip = cell;
+        }
 
         gameData.data.shipBoard[gameMessage.x][gameMessage.y] = BoardCellType.hit;
     } else if (cell === BoardCellType.water) {
