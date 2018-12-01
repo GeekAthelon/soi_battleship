@@ -81,10 +81,15 @@ function renderTargetingOverlay(
     }
 }
 
-function renderShips(gameData: IGameData, board: number[][], gridSize: number, draw: SVG.Doc) {
-    gameData.data.shipStatus.forEach((ship, idx) => {
+function renderShips(
+    shipStatus: IShipStatus[],
+    shipData: IShipData[],
+    gridSize: number,
+    draw: SVG.Doc,
+) {
+    shipStatus.forEach((ship, idx) => {
         const fmt = nodePrettyPrint.filter((p) => p.id === idx)[0] || def;
-        const shipSize = gameData.startGameData.shipData[idx].size;
+        const shipSize = shipData[idx].size;
         const shipThicknes = 0.55;
 
         let x1: number;
@@ -170,7 +175,13 @@ function renderShipBoard(
     draw.viewbox(0, 0, gridInfo.width, gridInfo.height);
 
     renderGrid(gameData, board, gridInfo.gridSize, draw);
-    renderShips(gameData, board, gridInfo.gridSize, draw);
+    renderShips(
+        gameData.data.shipStatus,
+        gameData.startGameData.shipData,
+        gridInfo.gridSize,
+        draw,
+    );
+
     renderPegs(gameData, board, gridInfo.gridSize, draw, lastPoint);
 }
 
