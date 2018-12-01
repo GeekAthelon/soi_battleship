@@ -274,7 +274,8 @@ async function mainInit(loginMessage: postMessage.IInitalizeIframe) {
             areBothReady();
         });
 
-        render.renderGrids(gameData);
+        render.processShipyard(gameData);
+        // render.renderGrids(gameData);
     };
 
     const setState = (state: STATE) => {
