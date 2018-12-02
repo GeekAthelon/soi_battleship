@@ -32,7 +32,7 @@ export function processShipyard(
                 const hstatus: IShipStatus = {
                     hitPoints: ship.size,
                     shipDirection: "h",
-                    x: gameData.startGameData.boardWidth - 1,
+                    x: 0,
                     y: idx,
                 };
 
@@ -43,7 +43,7 @@ export function processShipyard(
                 hitPoints: ship.size,
                 shipDirection: "v",
                 x: idx,
-                y: gameData.startGameData.boardHeight - 1,
+                y: 0,
             };
 
             return vstatus;

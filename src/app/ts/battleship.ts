@@ -29,17 +29,17 @@ export function tryPlaceShip(
     shipData: IShipData[],
     shipStatus: IShipStatus,
     shipNumber: number,
-    x: number,
-    y: number,
+    x1: number,
+    y1: number,
     direction: shipDirection,
     board: number[][]): boolean {
 
     const shipSize = shipData[shipNumber].size;
-    const xRange = direction === "h" ? range(x, x + shipSize - 1) : range(x, x);
-    const yRange = direction === "v" ? range(y, y + shipSize - 1) : range(y, y);
+    const xRange = direction === "h" ? range(x1, x1 + shipSize - 1) : range(x1, x1);
+    const yRange = direction === "v" ? range(y1, y1 + shipSize - 1) : range(y1, y1);
 
-    for (x of xRange) {
-        for (y of yRange) {
+    for (const x of xRange) {
+        for (const y of yRange) {
             if (!board[x]) {
                 return false;
             }
@@ -49,14 +49,14 @@ export function tryPlaceShip(
         }
     }
 
-    for (x of xRange) {
-        for (y of yRange) {
+    for (const x of xRange) {
+        for (const y of yRange) {
             board[x][y] = shipNumber;
         }
     }
 
-    shipStatus.x = x;
-    shipStatus.y = y;
+    shipStatus.x = x1;
+    shipStatus.y = y1;
     shipStatus.shipDirection = direction;
 
     return true;

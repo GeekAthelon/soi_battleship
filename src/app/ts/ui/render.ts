@@ -87,14 +87,8 @@ export function renderShips(
 
         let x1: number;
         let y1: number;
-
-        if (ship.shipDirection === "h") {
-            x1 = ship.x - shipSize + 1;
-            y1 = ship.y;
-        } else {
-            x1 = ship.x;
-            y1 = ship.y - shipSize + 1;
-        }
+        x1 = ship.x;
+        y1 = ship.y;
 
         const px = gridSize * x1;
         const py = gridSize * y1;
