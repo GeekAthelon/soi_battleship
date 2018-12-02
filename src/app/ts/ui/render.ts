@@ -80,7 +80,7 @@ export function renderShips(
     gridSize: number,
     draw: SVG.Doc,
 ) {
-    shipStatus.forEach((ship, idx) => {
+    const svgs = shipStatus.map((ship, idx) => {
         const fmt = nodePrettyPrint.filter((p) => p.id === idx)[0] || def;
         const shipSize = shipData[idx].size;
         const shipThicknes = 0.55;
@@ -106,12 +106,16 @@ export function renderShips(
         const ox = ((ship.shipDirection === "h" ? 0 : thicknessOffset));
         const oy = ((ship.shipDirection === "v" ? 0 : thicknessOffset));
 
-        draw.rect(l, h)
+        const rect = draw.rect(l, h)
             .stroke(fmt.color)
             .fill({ color: fmt.color, opacity: 1 })
             .radius(gridSize)
             .move(px + ox, py + oy);
+
+        return rect;
     });
+
+    return svgs;
 }
 
 function renderPegs(

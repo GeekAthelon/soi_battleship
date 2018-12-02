@@ -49,7 +49,7 @@ export function processShipyard(
             return vstatus;
         });
 
-        render.renderShips(
+        const shipSvgs = render.renderShips(
             newStatus,
             gameData.startGameData.shipData,
             gridInfo.gridSize,
@@ -64,6 +64,11 @@ export function processShipyard(
         display(commandsElement, "");
         commandsElement.innerHTML = "";
         commandsElement.appendChild(button);
+
+        shipSvgs.forEach((svg) => {
+            svg.stroke("#FFF")
+                .fill({ color: "#FFF", opacity: 1 });
+        });
     };
 
     renderShipYard("v");
