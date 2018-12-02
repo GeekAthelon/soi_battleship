@@ -2,6 +2,7 @@ import SVG from "svgjs";
 import { range } from "../../lib/range";
 import * as battleShip from "../battleship";
 import { IGameStatus, IPoint, STATE } from "../main";
+import { $, calculateGridData, display } from "./render-utils";
 
 interface INodePrettyPrint {
     id: number;
@@ -19,14 +20,6 @@ const nodePrettyPrint: INodePrettyPrint[] = [
     { id: battleShip.BoardCellType.hit, color: "red" },
 ];
 const def: INodePrettyPrint = { id: -1, color: "white" };
-
-function $(selector: string) {
-    return document.querySelector(selector) as HTMLElement;
-}
-
-function display(e: HTMLElement, mode: string) {
-    e.style.display = mode;
-}
 
 function renderGrid(gameData: IGameData, board: number[][], gridSize: number, draw: SVG.Doc) {
     for (const y of range(0, gameData.startGameData.boardHeight - 1)) {
@@ -81,7 +74,7 @@ function renderTargetingOverlay(
     }
 }
 
-function renderShips(
+export function renderShips(
     shipStatus: IShipStatus[],
     shipData: IShipData[],
     gridSize: number,
@@ -184,7 +177,7 @@ function renderShipBoard(
     renderPegs(gameData, board, gridInfo.gridSize, draw, lastPoint);
 }
 
-function renderTargetBoard(
+export function renderTargetBoard(
     gameData: IGameData,
     board: number[][],
     lastPoint?: IPoint,
@@ -205,25 +198,6 @@ function renderTargetBoard(
     }
 }
 
-const calculateGridData = (gameData: IGameData) => {
-    const w = Math.max(document.documentElement!.clientWidth, window.innerWidth || 0);
-    const h = Math.max(document.documentElement!.clientHeight, window.innerHeight || 0);
-
-    const smallestDim = Math.min(w * .45, h);
-
-    const width = smallestDim;
-    const height = smallestDim;
-    const t1 = Math.max(
-        gameData.startGameData.boardHeight,
-        gameData.startGameData.boardWidth,
-    );
-
-    const t2 = Math.min(height, width);
-
-    const gridSize = Math.floor(t2 / t1);
-    return { height, width, gridSize };
-};
-
 export function renderGrids(
     gameData: IGameData,
     lastPointAttacker?: IPoint,
@@ -232,52 +206,6 @@ export function renderGrids(
 ) {
     renderShipBoard(gameData, gameData.data.shipBoard, lastPointAttackee);
     renderTargetBoard(gameData, gameData.data.targetBoard, lastPointAttacker, cb);
-}
-
-export function processShipyard(
-    gameData: IGameData,
-) {
-    const targetElement = document.querySelector(".js-shipyard") as HTMLElement;
-    targetElement.innerHTML = "";
-
-    const gridInfo = calculateGridData(gameData);
-
-    const draw = SVG(targetElement).size(gridInfo.width, gridInfo.height);
-    draw.viewbox(0, 0, gridInfo.width, gridInfo.height);
-
-    display($(".js-shipyard"), "");
-    renderTargetBoard(gameData, gameData.data.targetBoard, undefined, undefined);
-
-    const renderShipYard = (dir: shipDirection) => {
-        const newStatus = gameData.startGameData.shipData.map((ship, idx) => {
-            if (dir === "h") {
-                const hstatus: IShipStatus = {
-                    hitPoints: ship.size,
-                    shipDirection: "h",
-                    x: gameData.startGameData.boardWidth - 1,
-                    y: idx,
-                };
-                return hstatus;
-            }
-            const vstatus: IShipStatus = {
-                hitPoints: ship.size,
-                shipDirection: "v",
-                x: idx,
-                y: gameData.startGameData.boardHeight - 1,
-            };
-            return vstatus;
-        });
-
-        renderShips(
-            newStatus,
-            gameData.startGameData.shipData,
-            gridInfo.gridSize,
-            draw,
-        );
-
-    };
-
-    renderShipYard("v");
 }
 
 export function showHidePlayerList(gameStatus: IGameStatus) {
