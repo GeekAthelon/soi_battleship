@@ -153,7 +153,7 @@ function renderPegs(
     }
 }
 
-function renderShipBoard(
+export function renderShipBoard(
     gameData: IGameData,
     board: number[][],
     lastPoint?: IPoint,

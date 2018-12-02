@@ -6,7 +6,7 @@ import * as firebasePubSub from "../lib/firebase-pub-sub";
 import * as nioPrep from "../lib/nio";
 import * as postMessage from "../lib/post-message";
 import * as battleShip from "./battleship";
-import { processShipyard } from "./ui/arrange-ships";
+import { hideShipYard, processShipyard } from "./ui/arrange-ships";
 import { askAcceptChallenge } from "./ui/ask-accept-challenge";
 import { addChallenge, removeChallenge } from "./ui/challenge-list";
 import { addPlayer, IPlayerInfo, removePlayer } from "./ui/player-list";
@@ -268,15 +268,17 @@ async function mainInit(loginMessage: postMessage.IInitalizeIframe) {
         render.waitForPlayerReady(gameData, gameStatus).then(() => {
             gameStatus.playerReady = true;
             playerIo.sendPlayerReady({ id: loginMessage.id });
+            hideShipYard();
+            render.renderGrids(gameData);
             areBothReady();
         });
+
         playerIo.recievePlayerReady().then((v) => {
             gameStatus.opponentReady = true;
             areBothReady();
         });
 
         processShipyard(gameData);
-        render.renderGrids(gameData);
     };
 
     const setState = (state: STATE) => {

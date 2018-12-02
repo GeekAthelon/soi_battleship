@@ -5,21 +5,28 @@ import { IGameStatus, IPoint, STATE } from "../main";
 import * as render from "./render";
 import { $, calculateGridData, display } from "./render-utils";
 
+const targetElement = document.querySelector(".js-shipyard") as HTMLElement;
+const commandsElement = $(".js-shipyard-commands");
+
+export function hideShipYard() {
+    display(targetElement, "none");
+    display(commandsElement, "none");
+}
+
 export function processShipyard(
     gameData: IGameData,
 ) {
-    const targetElement = document.querySelector(".js-shipyard") as HTMLElement;
-    targetElement.innerHTML = "";
-
-    const gridInfo = calculateGridData(gameData);
-
-    const draw = SVG(targetElement).size(gridInfo.width, gridInfo.height);
-    draw.viewbox(0, 0, gridInfo.width, gridInfo.height);
-
-    display($(".js-shipyard"), "");
-    render.renderTargetBoard(gameData, gameData.data.targetBoard, undefined, undefined);
-
     const renderShipYard = (dir: shipDirection) => {
+        targetElement.innerHTML = "";
+        display(targetElement, "");
+
+        const gridInfo = calculateGridData(gameData);
+
+        const draw = SVG(targetElement).size(gridInfo.width, gridInfo.height);
+        draw.viewbox(0, 0, gridInfo.width, gridInfo.height);
+
+        render.renderShipBoard(gameData, gameData.data.shipBoard);
+
         const newStatus = gameData.startGameData.shipData.map((ship, idx) => {
             if (dir === "h") {
                 const hstatus: IShipStatus = {
@@ -30,7 +37,6 @@ export function processShipyard(
                 };
 
                 return hstatus;
-
             }
 
             const vstatus: IShipStatus = {
@@ -49,6 +55,15 @@ export function processShipyard(
             gridInfo.gridSize,
             draw,
         );
+
+        const nextDirection = dir === "h" ? "v" : "h";
+        const button = document.createElement("button");
+        button.innerText = "Rotate";
+        button.addEventListener("click", () => renderShipYard(nextDirection));
+
+        display(commandsElement, "");
+        commandsElement.innerHTML = "";
+        commandsElement.appendChild(button);
     };
 
     renderShipYard("v");
