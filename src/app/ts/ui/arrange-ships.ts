@@ -57,13 +57,13 @@ export function processShipyard(
         );
 
         const nextDirection = dir === "h" ? "v" : "h";
-        const button = document.createElement("button");
-        button.innerText = "Rotate";
-        button.addEventListener("click", () => renderShipYard(nextDirection));
+        const rotateButton = document.createElement("button");
+        rotateButton.innerText = "Rotate";
+        rotateButton.addEventListener("click", () => renderShipYard(nextDirection));
 
         display(commandsElement, "");
         commandsElement.innerHTML = "";
-        commandsElement.appendChild(button);
+        commandsElement.appendChild(rotateButton);
 
         shipSvgs.forEach((svg) => {
             svg.stroke("#FFF")
