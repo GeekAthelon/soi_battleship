@@ -65,9 +65,12 @@ export function processShipyard(
         commandsElement.innerHTML = "";
         commandsElement.appendChild(rotateButton);
 
-        shipSvgs.forEach((svg) => {
+        shipSvgs.forEach((svg, idx) => {
             svg.stroke("#FFF")
                 .fill({ color: "#FFF", opacity: 1 });
+            svg.on("click", () => {
+                alert(`clicked on ${idx}`);
+            });
         });
     };
 
