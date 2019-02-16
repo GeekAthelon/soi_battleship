@@ -90,9 +90,7 @@ describe(`browser postMessage examples: Running ${amInBrowser()}`, function() {
                         onlineReferenceObject.set("online" + testValue);
                     })();
                 });
-
             });
         });
-
     }
 });
